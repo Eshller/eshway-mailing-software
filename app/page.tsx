@@ -13,9 +13,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 relative">
           <div className="text-center space-y-8">
             <div className="flex items-center justify-center mb-6">
-              <Mail className="h-12 w-12 text-[#d86dfc]" />
-              <span className="ml-3 text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#d86dfc] to-purple-600">
-                Eshway Mailer
+              <img src="/1bg.png" alt="" className="h-24 w-24" />
+              {/* <Mail className="h-12 w-12 text-[#d86dfc]" /> */}
+              <span className="ml-3 text-3xl font-bold text-black">
+                MAIL<span className="bg-clip-text text-transparent bg-gradient-to-r from-[#d86dfc] to-purple-600">WAY</span>
               </span>
             </div>
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900">

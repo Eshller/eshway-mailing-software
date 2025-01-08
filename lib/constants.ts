@@ -96,7 +96,6 @@ export const emailTemplates = [
       </div>
   </body>
   </html>
-  
       `,
     },
     {
@@ -119,44 +118,37 @@ export const emailTemplates = [
     {
         id: "product-launch-2",
         name: "Product Launch 2",
-        subject: "Introducing Our Latest Product",
+        subject: "Introducing Our Latestss Product",
         content: `
-        <!DOCTYPE html>
-  <html>
-  <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  </head>
-  <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333333; background-color: #f4f4f4;">
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <tr>
-              <td style="padding: 40px 30px;">
-                  <h1 style="color: #2c3e50; font-size: 24px; margin: 0 0 20px 0;">Can We Listen to Your Story?</h1>
-                  
-                  <p style="margin: 0 0 20px 0;">Dear [Recipient Name],</p>
-                  
-                  <p style="margin: 0 0 20px 0;">We hope you do not need our product. Here's a real story of someone who does.</p>
-                  
-                  <div style="background-color: #f8f9fa; padding: 20px; border-left: 4px solid #d86dfc; margin: 20px 0;">
-                      <p style="margin: 0 0 15px 0;">Sarah opened her business, with dreams of building something she could be proud of. But soon, the challenges began to mount. She was working 16-hour days, juggling customer demands, managing finances she didn't fully understand, and struggling to break even. Despite her tireless efforts, the bakery wasn't profitable, and Sarah began to feel like a failure.</p>
-                  </div>
-                  
-                  <p style="margin: 0 0 20px 0;">This is the reality for many small businesses. Entrepreneurs face long hours, inefficient systems, and decisions based on outdated data. We believe these challenges don't have to be the norm.</p>
-                  
-                  <p style="margin: 0 0 20px 0;">To help businesses overcome these hurdles, we need to understand your struggles. What's holding you back? Your insights, whether through a brief conversation or a quick survey, will directly help shape the solutions we're working on, and we're committed to building something that genuinely addresses the pain points businesses like yours experience every day.</p>
-                  
-                  <p style="margin: 0 0 20px 0;">Thank you for your time, and we look forward to connecting soon.</p>
-                  
-                  <p style="margin: 0;">Best regards,</p>
-                  <p style="margin: 5px 0; font-weight: bold;">Aditya Pratap Goswami</p>
-                  <p style="margin: 0; color: #666666;">Product Manager</p>
-                  <p style="margin: 5px 0;"><a href="mailto:aditya@eshway.com" style="color: #d86dfc; text-decoration: none;">aditya@eshway.com</a></p>
-                  <p style="margin: 5px 0; font-weight: bold; color: #2c3e50;">Eshway</p>
-              </td>
-          </tr>
-      </table>
-  </body>
-  </html>
+  <div style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333333; background-color: #d86dfc;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <tr>
+          <td style="padding: 40px 30px;">
+              <h1 style="color: #2c3e50; font-size: 24px; margin: 0 0 20px 0;">Can We Listen to Your Story?</h1>
+              
+              <p style="margin: 0 0 20px 0;">Dear [Recipient Name],</p>
+              
+              <p style="margin: 0 0 20px 0;">We hope you do not need our product. Here's a real story of someone who does.</p>
+              
+              <div style="background-color: #f8f9fa; padding: 20px; border-left: 4px solid #d86dfc; margin: 20px 0;">
+                  <p style="margin: 0 0 15px 0;">Sarah opened her business, with dreams of building something she could be proud of. But soon, the challenges began to mount. She was working 16-hour days, juggling customer demands, managing finances she didn't fully understand, and struggling to break even. Despite her tireless efforts, the bakery wasn't profitable, and Sarah began to feel like a failure.</p>
+              </div>
+              
+              <p style="margin: 0 0 20px 0;">This is the reality for many small businesses. Entrepreneurs face long hours, inefficient systems, and decisions based on outdated data. We believe these challenges don't have to be the norm.</p>
+              
+              <p style="margin: 0 0 20px 0;">To help businesses overcome these hurdles, we need to understand your struggles. What's holding you back? Your insights, whether through a brief conversation or a quick survey, will directly help shape the solutions we're working on, and we're committed to building something that genuinely addresses the pain points businesses like yours experience every day.</p>
+              
+              <p style="margin: 0 0 20px 0;">Thank you for your time, and we look forward to connecting soon.</p>
+              
+              <p style="margin: 0;">Best regards,</p>
+              <p style="margin: 5px 0; font-weight: bold;">Aditya Pratap Goswami</p>
+              <p style="margin: 0; color: #666666;">Product Manager</p>
+              <p style="margin: 5px 0;"><a href="mailto:aditya@eshway.com" style="color: #d86dfc; text-decoration: none;">aditya@eshway.com</a></p>
+              <p style="margin: 5px 0; font-weight: bold; color: #2c3e50;">Eshway</p>
+          </td>
+      </tr>
+  </table>
+  </div>
       `,
     },
     {
@@ -180,7 +172,7 @@ export const emailTemplates = [
           <!-- Header -->
           <tr>
               <td style="background-color: #2c3e50; padding: 30px; text-align: center;">
-                  <img src="https://eshway.com/black.png" width="50px" height="40px" alt="Eshway Logo" style="max-width: 120px;">
+                  <img src="https://eshway.com/black.png" width="40px" height="40px" alt="Eshway Logo" style="max-width: 120px;">
               </td>
           </tr>
           
@@ -229,7 +221,7 @@ export const emailTemplates = [
                   <!-- CTA Section -->
                   <div style="text-align: center; margin: 40px 0;">
                       <p style="margin: 0 0 20px 0; font-size: 18px; color: #2c3e50;">Share Your Story With Us</p>
-                      <a href="#" style="display: inline-block; padding: 15px 30px; background-color: #d86dfc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Schedule a Conversation</a>
+                      <a href="https://forms.gle/jMKX7vMmRewPggJM7" target="_blank" style="display: inline-block; padding: 15px 30px; background-color: #d86dfc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Schedule a Conversation</a>
                   </div>
                   
                   <!-- Signature -->
@@ -263,13 +255,7 @@ export const emailTemplates = [
         name: "Product Launch 4",
         subject: "Introducing Our Latest Product",
         content: `
-        <!DOCTYPE html>
-  <html>
-  <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  </head>
-  <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333333; background-color: #f4f4f4;">
+  <div style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333333; background-color: #f4f4f4;">
       <!-- Preview Text -->
       <div style="display: none; max-height: 0px; overflow: hidden;">
           Stop struggling with your business operations - Learn how Sarah transformed her bakery...
@@ -329,7 +315,7 @@ export const emailTemplates = [
                   <div style="text-align: center; background: linear-gradient(135deg, #6366F1 0%, #d86dfc 100%); padding: 40px; border-radius: 12px; margin: 30px 0;">
                       <h2 style="color: #ffffff; margin: 0 0 15px 0; font-size: 24px;">Ready to Write Your Success Story?</h2>
                       <p style="color: #ffffff; margin: 0 0 25px 0; opacity: 0.9;">Share your challenges with us, and let's build solutions together.</p>
-                      <a href="#" style="display: inline-block; padding: 15px 30px; background-color: #ffffff; color: #d86dfc; text-decoration: none; border-radius: 25px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Book Your Session</a>
+                      <a href="https://forms.gle/jMKX7vMmRewPggJM7" target="_blank" style="display: inline-block; padding: 15px 30px; background-color: #ffffff; color: #d86dfc; text-decoration: none; border-radius: 25px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Book Your Session</a>
                   </div>
                   
                   <!-- Signature -->
@@ -355,8 +341,7 @@ export const emailTemplates = [
               </td>
           </tr>
       </table>
-  </body>
-  </html>
+  </div>
       `,
     },
     {
@@ -415,6 +400,13 @@ export const emailTemplates = [
             addresses the pain points businesses like experience every day.</p>
         </div>
       </div>
+
+      <!-- Call to Action -->
+        <div style="text-align: center; background: linear-gradient(135deg, #6366F1 0%, #d86dfc 100%); padding: 40px; border-radius: 12px; margin: 30px 0;">
+            <h2 style="color: #ffffff; margin: 0 0 15px 0; font-size: 24px;">Ready to Write Your Success Story?</h2>
+            <p style="color: #ffffff; margin: 0 0 25px 0; opacity: 0.9;">Share your challenges with us, and let's build solutions together.</p>
+            <a href="https://forms.gle/jMKX7vMmRewPggJM7" target="_blank" style="display: inline-block; padding: 15px 30px; background-color: #ffffff; color: #d86dfc; text-decoration: none; border-radius: 25px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Book Your Session</a>
+        </div>
 
       <div style="background-color: #1c2541; padding: 20px; border-radius: 10px;">
         <h3 style="margin-bottom: 10px; color: #ff9dfd;">What's In It For You?</h3>

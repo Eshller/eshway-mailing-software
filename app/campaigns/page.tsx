@@ -17,6 +17,7 @@ import { emailTemplates } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 import { Contact } from "@prisma/client";
+import { Loader2 } from "lucide-react";
 
 export default function CampaignsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(emailTemplates[0]);
@@ -65,121 +66,124 @@ export default function CampaignsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Create Campaign</h1>
+      {isLoading ? <div className="flex justify-center items-center h-screen">
+        <Loader2 className="animate-spin" />
+      </div> : (
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <Card className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <Label>Email Template</Label>
+                  <Select
+                    value={selectedTemplate.id}
+                    onValueChange={handleTemplateChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a template" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {emailTemplates.map((template) => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <Card className="p-6">
-            <div className="space-y-4">
-              <div>
-                <Label>Email Template</Label>
-                <Select
-                  value={selectedTemplate.id}
-                  onValueChange={handleTemplateChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a template" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {emailTemplates.map((template) => (
-                      <SelectItem key={template.id} value={template.id}>
-                        {template.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div>
+                  <Label>Subject Line</Label>
+                  <Input
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label>Email Content</Label>
+                  <Textarea
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    className="min-h-[300px]"
+                  />
+                </div>
               </div>
+            </Card>
 
-              <div>
-                <Label>Subject Line</Label>
-                <Input
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                />
-              </div>
+            <Button
+              onClick={handleSend}
+              className="w-full bg-[#d86dfc] hover:bg-[#c44ee7]"
+            >
+              Send Campaign
+            </Button>
+          </div>
 
-              <div>
-                <Label>Email Content</Label>
-                <Textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[300px]"
-                />
-              </div>
-            </div>
-          </Card>
-
-          <Button
-            onClick={handleSend}
-            className="w-full bg-[#d86dfc] hover:bg-[#c44ee7]"
-          >
-            Send Campaign
-          </Button>
-        </div>
-
-        <div className="space-y-6">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Preview</h2>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-sm text-gray-500">Subject</Label>
-                <p className="font-medium">{subject}</p>
-              </div>
-              <div>
-                <Label className="text-sm text-gray-500">Content</Label>
-                <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content }} />
-                {/* <div className="prose max-w-none">
+          <div className="space-y-6">
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Preview</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm text-gray-500">Subject</Label>
+                  <p className="font-medium">{subject}</p>
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-500">Content</Label>
+                  <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content }} />
+                  {/* <div className="prose max-w-none">
                   {content.split("\n").map((line, i) => (
                     <p key={i}>{line}</p>
                   ))}
                 </div> */}
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
 
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Campaign Settings</h2>
-            <div className="space-y-4">
-              <div>
-                <Label>Send To</Label>
-                <Select defaultValue="all">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select recipients" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Contacts</SelectItem>
-                    {contacts.reduce((uniqueTags: string[], contact) => {
-                      const contactTags = contact.tags as string;
-                      contactTags?.split(',').forEach((tag: string) => {
-                        if (!uniqueTags.includes(tag)) {
-                          uniqueTags.push(tag);
-                        }
-                      });
-                      return uniqueTags;
-                    }, []).map((tag: string) => (
-                      <SelectItem key={tag} value={tag}>
-                        {tag}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Campaign Settings</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label>Send To</Label>
+                  <Select defaultValue="all">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select recipients" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Contacts</SelectItem>
+                      {contacts.reduce((uniqueTags: string[], contact) => {
+                        const contactTags = contact.tags as string;
+                        contactTags?.split(',').forEach((tag: string) => {
+                          if (!uniqueTags.includes(tag)) {
+                            uniqueTags.push(tag);
+                          }
+                        });
+                        return uniqueTags;
+                      }, []).map((tag: string) => (
+                        <SelectItem key={tag} value={tag}>
+                          {tag}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div>
-                <Label>Schedule</Label>
-                <Select defaultValue="now">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select schedule" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="now">Send Now</SelectItem>
-                    <SelectItem value="later">Schedule for Later</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div>
+                  <Label>Schedule</Label>
+                  <Select defaultValue="now">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select schedule" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="now">Send Now</SelectItem>
+                      <SelectItem value="later">Schedule for Later</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

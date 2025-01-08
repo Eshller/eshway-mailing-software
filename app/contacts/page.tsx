@@ -1,10 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { ArrowLeft, Upload, UserPlus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import ContactList from "@/components/contacts/contact-list";

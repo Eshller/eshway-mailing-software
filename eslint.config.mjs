@@ -9,8 +9,6 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-// "next/core-web-vitals", "next/typescript"
-// 80:35  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 const eslintConfig = [
   ...compat.config({
     extends: ['next', 'next/core-web-vitals', 'next/typescript'],

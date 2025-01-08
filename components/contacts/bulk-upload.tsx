@@ -120,10 +120,10 @@ export function BulkUpload() {
         router.push("/contacts");
       }
       console.log("response", response);
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error uploading CSV file",
-        description: "An error occurred while uploading the CSV file.",
+        description: error?.message || "An error occurred while uploading the CSV file.",
         variant: "destructive",
       });
     } finally {

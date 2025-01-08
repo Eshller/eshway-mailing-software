@@ -20,7 +20,6 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Contact } from '@prisma/client';
-import { Progress } from '@/components/ui/progress';
 import { Select, SelectItem, SelectValue, SelectContent, SelectTrigger } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -103,10 +102,10 @@ const EmailInterface = () => {
                 description: "Email sent successfully.",
                 variant: "default",
             })
-        } catch (error) {
+        } catch (error: any) {
             toast({
                 title: "Error sending email",
-                description: "Please try again.",
+                description: error?.message || "Please try again.",
                 variant: "destructive",
             });
         }

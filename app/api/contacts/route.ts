@@ -1,13 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { query } from "@/lib/db";
 export const dynamic = "force-dynamic";
-
-const contacts = [
-    { id: 1, name: "John Doe", email: "john@example.com", tags: ["Customer"] },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", tags: ["Lead"] },
-    // Add more mock data
-];
 
 export async function POST(req: Request) {
     try {

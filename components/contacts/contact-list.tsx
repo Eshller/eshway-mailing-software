@@ -42,10 +42,10 @@ export default function ContactList() {
         const response = await fetch("/api/contacts");
         const data = await response.json();
         setContacts(data);
-      } catch (error) {
+      } catch (error: any) {
         toast({
           title: "Error fetching contacts",
-          description: "Please try again.",
+          description: error?.message || "Please try again.",
           variant: "destructive",
         });
         console.error("Error fetching contacts:", error);
@@ -76,10 +76,10 @@ export default function ContactList() {
       });
       setSelectedContacts([]);
       setSelectAll(false);
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error deleting selected contacts",
-        description: "Please try again.",
+        description: error?.message || "Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -142,10 +142,10 @@ export default function ContactList() {
           variant: "default",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error editing contact",
-        description: "Please try again.",
+        description: error?.message || "Please try again.",
         variant: "destructive",
       });
       setContacts((prevContacts) =>
@@ -175,10 +175,10 @@ export default function ContactList() {
           variant: "default",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error deleting contact",
-        description: "Please try again.",
+        description: error?.message || "Please try again.",
         variant: "destructive",
       });
     }

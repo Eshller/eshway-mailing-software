@@ -358,6 +358,254 @@ export const emailTemplates = [
   </body>
   </html>
       `,
-    }
+    },
+    {
+        id: "product-launch-5",
+        name: "Product Launch 5",
+        subject: "Introducing Our Latest Product",
+        content: `
+        <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Can We Listen to Your Story?</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #12192a;
+        color: #ffffff;
+        line-height: 1.6;
+      }
+
+      .container {
+        padding: 20px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 30px;
+      }
+
+      .logo {
+        max-width: 100px;
+      }
+
+      .header-title {
+        flex: 1;
+        text-align: center;
+      }
+
+      .header h1 {
+        color: #ffffff;
+        font-size: 2em;
+      }
+
+      .header h2 {
+        color: #ff4d4d;
+        font-size: 1.2em;
+        margin-top: -10px;
+      }
+
+      .story-section {
+        margin-bottom: 30px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+
+      .story-text {
+        flex: 1;
+        min-width: 300px;
+      }
+
+      .story-text p {
+        margin: 10px 0;
+      }
+
+      .story-image {
+        flex: 1;
+        min-width: 300px;
+        text-align: center;
+      }
+
+      .story-image img {
+        max-width: 100%;
+        border-radius: 10px;
+      }
+
+      .highlight {
+        color: #ff9dfd;
+        font-size: 1.2em;
+        margin-top: 20px;
+      }
+
+      .footer {
+        background-color: #1c2541;
+        padding: 20px;
+        border-radius: 10px;
+      }
+
+      .footer h3 {
+        margin-bottom: 10px;
+        color: #ff9dfd;
+      }
+
+      .footer ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .footer ul li {
+        margin: 10px 0;
+      }
+
+      .footer ul li::before {
+        content: "2022";
+        color: #ff9dfd;
+        font-weight: bold;
+        display: inline-block;
+        width: 20px;
+      }
+
+      .footer p {
+        margin-top: 20px;
+        font-size: 1.1em;
+      }
+
+      .footer p span {
+        color: #ff9dfd;
+      }
+
+      .Powered {
+        align-items: flex-start;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+          "
+        >
+          <img src="logo.png" alt="Eshway Logo" class="logo" />
+          <span
+            style="
+              font-weight: light;
+              color: #d1d5db;
+              line-height: 1.3;
+              font-size: 0.7rem;
+            "
+            >Powered by <br /><span
+              style="font-weight: bold; font-size: 1.7rem; color: white"
+              >Eshway</span
+            ></span
+          >
+        </div>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+          "
+        >
+          <span style="font-weight: bold; font-size: 1.7rem; color: white"
+            >LTD</span
+          >
+          <img src="ltd-removebg-preview.png" alt="LTD Logo" class="logo" />
+        </div>
+      </div>
+      <div class="header-title">
+        <h1>
+          Can We Listen to <span style="color: #ff9dfd">Your Story?</span>
+        </h1>
+        <h3 style="color: #ff4d4d">
+          We hope you do not need our product. <br />
+        </h3>
+        <h2>But here's a real story of someone who does.</h2>
+      </div>
+
+      <div class="story-section">
+        <div class="story-text">
+          <p>
+            Sarah, after quitting her job, opened a B2C business, with dreams of
+            building something she could be proud of.
+          </p>
+          <p>
+            But soon, the challenges piled up. She was working 16-hour days,
+            juggling customer demands, managing finances she didn’t fully
+            understand, and struggling to break even.
+          </p>
+          <p>
+            Despite her tireless efforts, the business wasn’t profitable, and
+            Sarah began to feel like a failure.
+          </p>
+        </div>
+        <div class="story-image">
+          <img src="lady.jpg" alt="Sarah's struggles" />
+        </div>
+      </div>
+
+      <div class="highlight">
+        <p>This is the reality for many small businesses.</p>
+      </div>
+
+      <div class="story-section">
+        <div class="story-text">
+          <p>
+            Entrepreneurs face long hours, inefficient systems, and decisions
+            based on outdated data. We believe these challenges don’t have to be
+            the norm. To help businesses overcome these hurdles, we need to
+            understand your struggles. What’s holding you back?
+          </p>
+          <p>
+            Your insights, whether through a brief conversation or an in-depth
+            analysis, will directly help shape the solutions we’re working on,
+            and we’re committed to building something that genuinely addresses
+            the pain points businesses like experience every day.
+          </p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <h3>What's In It For You?</h3>
+        <ul>
+          <li>
+            <strong>Personalized Solutions:</strong> Insights to help you
+            address your current business challenges.
+          </li>
+          <li>
+            <strong>Better Efficiency:</strong> Leverage data-driven
+            decision-making for better results.
+          </li>
+          <li>
+            <strong>Competitive Edge:</strong> Access the latest strategies and
+            tools designed to keep your business ahead of the curve.
+          </li>
+        </ul>
+      </div>
+      <p>
+        Thank you for your time,
+        <span style="color: #ff9dfd"
+          >and we look forward to connecting soon.</span
+        >
+      </p>
+    </div>
+  </body>
+</html>
+        `,
+    },
     // Add more templates as needed
 ];

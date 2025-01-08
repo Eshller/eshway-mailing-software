@@ -83,7 +83,7 @@ const EmailInterface = () => {
             //         content: personalizedContent
             //     }
             // })
-            const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/send-email', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/send-email`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

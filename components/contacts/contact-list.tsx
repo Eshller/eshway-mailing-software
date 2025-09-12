@@ -321,14 +321,16 @@ export default function ContactList() {
                         }
                       />
                     ) : (
-                      contact.tags?.split(",").map((tag: string) => (
-                        <span
-                          key={tag}
-                          className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))
+                      <div className="flex gap-2 flex-wrap">
+                        {contact.tags?.split(",").map((tag: string) => (
+                          <span
+                            key={tag}
+                            className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     )}
                     {/* <div className="flex gap-2">
                       {contact.tags?.split(",").map((tag: string) => (

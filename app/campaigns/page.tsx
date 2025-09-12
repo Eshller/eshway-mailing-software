@@ -153,8 +153,9 @@ export default function CampaignsPage() {
                       {contacts.reduce((uniqueTags: string[], contact) => {
                         const contactTags = contact.tags as string;
                         contactTags?.split(',').forEach((tag: string) => {
-                          if (!uniqueTags.includes(tag)) {
-                            uniqueTags.push(tag);
+                          const trimmedTag = tag.trim();
+                          if (trimmedTag && !uniqueTags.includes(trimmedTag)) {
+                            uniqueTags.push(trimmedTag);
                           }
                         });
                         return uniqueTags;

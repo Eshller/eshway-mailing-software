@@ -46,9 +46,9 @@ export function BulkUpload() {
 
   const handleDownloadTemplate = () => {
     const template = [
-      ['name', 'email', 'phone', 'tags'],  // Header row
-      ['John Doe', 'johndoe@example.com', '9898989898', 'tag1,tag2'],
-      ['Jane Smith', 'janesmith@example.com', '8712413212', 'tag3']
+      ['name', 'email', 'phone', 'company', 'tags'],  // Header row
+      ['John Doe', 'johndoe@example.com', '9898989898', 'Company A', 'tag1,tag2'],
+      ['Jane Smith', 'janesmith@example.com', '8712413212', 'Eshway', 'tag3']
     ];
 
     const csvContent = template
@@ -210,8 +210,8 @@ export function BulkUpload() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {csvData.slice(0, 5).map((contact: any) => (
-                <TableRow key={contact.id}>
+              {csvData.slice(0, 5).map((contact: any, index: number) => (
+                <TableRow key={index}>
                   <TableCell>{contact.name}</TableCell>
                   <TableCell>{contact.email}</TableCell>
                   <TableCell>{contact.phone}</TableCell>

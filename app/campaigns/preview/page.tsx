@@ -82,8 +82,9 @@ const EmailInterface = () => {
             //         content: personalizedContent
             //     }
             // })
-            console.log(`${process.env.NEXT_PUBLIC_API_URL}/send-email`);
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/send-email`, {
+            console.log(`${process.env.NEXT_PUBLIC_API_URL_LOCAL}/send-email`);
+            // console.log("recipients", selectedContacts.map(contact => contact.email));
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_LOCAL}/send-email`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -189,7 +190,9 @@ const EmailInterface = () => {
                         </div>
 
                         {/* Email Content */}
-                        <div className="prose max-w-none mb-8 border-2 border-gray-200 p-4 rounded-md" dangerouslySetInnerHTML={{ __html: emailTemplate.content }} />
+                        <div className="prose max-w-none mb-8 border-2 border-gray-200 p-4 rounded-md" dangerouslySetInnerHTML={{
+                            __html: emailTemplate.html ? `<style>${emailTemplate.css || ''}</style>${emailTemplate.html}` : emailTemplate.content
+                        }} />
 
                         {/* Reply Actions */}
                         {/* <div className="flex gap-2">

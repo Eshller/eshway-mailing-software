@@ -26,6 +26,7 @@ export default function CampaignsPage() {
   const router = useRouter();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasBuilderContent, setHasBuilderContent] = useState(false);
 
   const handleTemplateChange = (templateId: string) => {
     const template = emailTemplates.find((t) => t.id === templateId) || emailTemplates[0];
@@ -61,6 +62,18 @@ export default function CampaignsPage() {
       }
     };
     fetchContacts();
+
+    // Load builder content if exists
+    try {
+      const saved = localStorage.getItem("builtTemplateHtml");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.inline) {
+          setContent(parsed.inline);
+          setHasBuilderContent(true);
+        }
+      }
+    } catch (_) { }
   }, []);
 
   return (
@@ -75,6 +88,17 @@ export default function CampaignsPage() {
               <div className="space-y-4">
                 <div>
                   <Label>Email Template</Label>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button
+                      variant="secondary"
+                      onClick={() => router.push("/campaigns/builder")}
+                    >
+                      Open Template Builder
+                    </Button>
+                    {hasBuilderContent && (
+                      <span className="text-xs text-gray-500">Loaded from builder</span>
+                    )}
+                  </div>
                   <Select
                     value={selectedTemplate.id}
                     onValueChange={handleTemplateChange}

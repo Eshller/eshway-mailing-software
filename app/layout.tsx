@@ -20,6 +20,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/grapesjs/dist/css/grapes.min.css"
+        />
+      </head>
       <body
         className={`${montserrat.variable} antialiased`}
       >

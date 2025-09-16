@@ -23,6 +23,14 @@ import { Contact } from '@prisma/client';
 import { Select, SelectItem, SelectValue, SelectContent, SelectTrigger } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+// Utility function to convert text content to HTML with proper line breaks
+const formatTextToHtml = (text: string): string => {
+    return text
+        .replace(/\n/g, '<br>') // Convert line breaks to HTML breaks
+        .replace(/\r\n/g, '<br>') // Convert Windows line breaks
+        .replace(/\r/g, '<br>'); // Convert Mac line breaks
+};
+
 // Smart Contact Table Component that dynamically shows columns based on data
 const ContactTable = ({ contacts }: { contacts: Contact[] }) => {
     // Analyze which fields have data
@@ -319,7 +327,7 @@ const EmailInterface = () => {
 
                         {/* Email Content */}
                         <div className="prose max-w-none mb-8 border-2 border-gray-200 p-4 rounded-md" dangerouslySetInnerHTML={{
-                            __html: emailTemplate.html ? `<style>${emailTemplate.css || ''}</style>${emailTemplate.html}` : emailTemplate.content
+                            __html: emailTemplate.html ? `<style>${emailTemplate.css || ''}</style>${emailTemplate.html}` : formatTextToHtml(emailTemplate.content)
                         }} />
 
                         {/* Reply Actions */}

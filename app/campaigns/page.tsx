@@ -18,16 +18,28 @@ import { emailTemplates } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 import { Contact } from "@prisma/client";
-import { Loader2, Plus, List } from "lucide-react";
+import { Loader2, Plus, List, FileText } from "lucide-react";
 import { ProtectedRoute } from "@/components/protected-route";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { CampaignsList } from "@/components/campaigns/campaigns-list";
+import { TemplateBuilder } from "@/components/template-builder";
+
+// Utility function to convert text content to HTML with proper line breaks
+const formatTextToHtml = (text: string): string => {
+  return text
+    .replace(/\n/g, '<br>') // Convert line breaks to HTML breaks
+    .replace(/\r\n/g, '<br>') // Convert Windows line breaks
+    .replace(/\r/g, '<br>'); // Convert Mac line breaks
+};
 
 function CampaignsPageContent() {
   const [selectedTemplate, setSelectedTemplate] = useState(emailTemplates[0]);
   const [subject, setSubject] = useState(emailTemplates[0].subject);
   const [content, setContent] = useState(emailTemplates[0].content);
   const [viewMode, setViewMode] = useState<'list' | 'create'>('list');
+  const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
+  const [customTemplates, setCustomTemplates] = useState<any[]>([]);
+  const [allTemplates, setAllTemplates] = useState(emailTemplates);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -35,10 +47,39 @@ function CampaignsPageContent() {
   const [hasBuilderContent, setHasBuilderContent] = useState(false);
 
   const handleTemplateChange = (templateId: string) => {
-    const template = emailTemplates.find((t) => t.id === templateId) || emailTemplates[0];
+    const template = allTemplates.find((t) => t.id === templateId) || allTemplates[0];
     setSelectedTemplate(template);
     setSubject(template.subject);
     setContent(template.content);
+  };
+
+  const handleTemplateSaved = (newTemplate: any) => {
+    // Add the new template to the list
+    const templateWithId = {
+      ...newTemplate,
+      id: newTemplate.id || `custom-${Date.now()}`,
+    };
+
+    setCustomTemplates(prev => [...prev, templateWithId]);
+    setAllTemplates(prev => [...prev, templateWithId]);
+
+    // Auto-select the new template
+    setSelectedTemplate(templateWithId);
+    setSubject(templateWithId.subject);
+    setContent(templateWithId.content);
+  };
+
+  const fetchCustomTemplates = async () => {
+    try {
+      const response = await fetch('/api/templates');
+      if (response.ok) {
+        const templates = await response.json();
+        setCustomTemplates(templates);
+        setAllTemplates([...emailTemplates, ...templates]);
+      }
+    } catch (error) {
+      console.error('Error fetching custom templates:', error);
+    }
   };
 
   const handleCreateNew = () => {
@@ -132,7 +173,9 @@ function CampaignsPageContent() {
         setIsLoading(false);
       }
     };
+
     fetchContacts();
+    fetchCustomTemplates();
 
     // Load builder content if exists
     try {
@@ -194,9 +237,16 @@ function CampaignsPageContent() {
                   <div className="space-y-4">
                     <div>
                       <Label>Email Template</Label>
-                      <div className="flex items-center gap-2 mt-2">
+                      <div className="flex items-center gap-2 my-2">
                         <Button
                           variant="secondary"
+                          onClick={() => setShowTemplateBuilder(true)}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Create Template
+                        </Button>
+                        <Button
+                          variant="outline"
                           onClick={() => router.push("/campaigns/builder")}
                         >
                           Open Template Builder
@@ -213,6 +263,21 @@ function CampaignsPageContent() {
                           <SelectValue placeholder="Select a template" />
                         </SelectTrigger>
                         <SelectContent>
+                          {customTemplates.length > 0 && (
+                            <>
+                              <div className="px-2 py-1.5 text-sm font-semibold text-gray-500">
+                                Custom Templates
+                              </div>
+                              {customTemplates.map((template) => (
+                                <SelectItem key={template.id} value={template.id}>
+                                  {template.name}
+                                </SelectItem>
+                              ))}
+                              <div className="px-2 py-1.5 text-sm font-semibold text-gray-500">
+                                Default Templates
+                              </div>
+                            </>
+                          )}
                           {emailTemplates.map((template) => (
                             <SelectItem key={template.id} value={template.id}>
                               {template.name}
@@ -267,7 +332,7 @@ function CampaignsPageContent() {
                     </div>
                     <div>
                       <Label className="text-sm text-gray-500">Content</Label>
-                      <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content }} />
+                      <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: formatTextToHtml(content) }} />
                       {/* <div className="prose max-w-none">
                   {content.split("\n").map((line, i) => (
                     <p key={i}>{line}</p>
@@ -324,6 +389,13 @@ function CampaignsPageContent() {
             </div>
           )}
         </>
+      )}
+
+      {showTemplateBuilder && (
+        <TemplateBuilder
+          onSave={handleTemplateSaved}
+          onClose={() => setShowTemplateBuilder(false)}
+        />
       )}
     </div>
   );

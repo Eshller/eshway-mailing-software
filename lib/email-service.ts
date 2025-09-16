@@ -43,8 +43,9 @@ export class EmailService {
             const name = emailData.names[i] || 'Valued Customer';
 
             try {
-                // Personalize content
-                const personalizedContent = this.personalizeContent(emailData.content, name);
+                // Format content with proper line breaks and then personalize
+                const formattedContent = this.formatTextToHtml(emailData.content);
+                const personalizedContent = this.personalizeContent(formattedContent, name);
 
                 // Create email command
                 const command = new SendEmailCommand({
@@ -99,6 +100,13 @@ export class EmailService {
         }
 
         return results;
+    }
+
+    private formatTextToHtml(text: string): string {
+        return text
+            .replace(/\n/g, '<br>') // Convert line breaks to HTML breaks
+            .replace(/\r\n/g, '<br>') // Convert Windows line breaks
+            .replace(/\r/g, '<br>'); // Convert Mac line breaks
     }
 
     private personalizeContent(content: string, name: string): string {

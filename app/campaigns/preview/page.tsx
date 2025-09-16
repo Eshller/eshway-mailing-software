@@ -23,6 +23,78 @@ import { Contact } from '@prisma/client';
 import { Select, SelectItem, SelectValue, SelectContent, SelectTrigger } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+// Smart Contact Table Component that dynamically shows columns based on data
+const ContactTable = ({ contacts }: { contacts: Contact[] }) => {
+    // Analyze which fields have data
+    const hasPhone = contacts.some(contact => contact.phone && contact.phone.trim() !== '');
+    const hasCompany = contacts.some(contact => contact.company && contact.company.trim() !== '');
+    const hasTags = contacts.some(contact => contact.tags && contact.tags.trim() !== '');
+
+    // Define columns to show
+    const columns = [
+        { key: 'name', label: 'Name', show: true },
+        { key: 'email', label: 'Email', show: true },
+        { key: 'phone', label: 'Phone', show: hasPhone },
+        { key: 'company', label: 'Company', show: hasCompany },
+        { key: 'tags', label: 'Tags', show: hasTags },
+    ].filter(col => col.show);
+
+    const formatValue = (contact: Contact, key: string) => {
+        switch (key) {
+            case 'name':
+                return contact.name;
+            case 'email':
+                return contact.email;
+            case 'phone':
+                return contact.phone || '-';
+            case 'company':
+                return contact.company || '-';
+            case 'tags':
+                return contact.tags || '-';
+            default:
+                return '-';
+        }
+    };
+
+    return (
+        <div className="w-full max-w-4xl">
+            <div className="mb-2 text-sm text-gray-600">
+                Showing {contacts.length} contact{contacts.length !== 1 ? 's' : ''}
+                {hasPhone && ' • Phone numbers available'}
+                {hasCompany && ' • Company info available'}
+                {hasTags && ' • Tags available'}
+            </div>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        {columns.map((column) => (
+                            <TableHead key={column.key}>{column.label}</TableHead>
+                        ))}
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {contacts.slice(0, 10).map((contact) => (
+                        <TableRow key={contact.id}>
+                            {columns.map((column) => (
+                                <TableCell key={column.key}>
+                                    {formatValue(contact, column.key)}
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    ))}
+                    {contacts.length > 10 && (
+                        <TableRow>
+                            <TableCell colSpan={columns.length} className="text-center text-gray-500">
+                                + {contacts.length - 10} more contact{contacts.length - 10 !== 1 ? 's' : ''}
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+        </div>
+    );
+};
+
 const EmailInterface = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [contacts, setContacts] = useState<Contact[]>([]);
@@ -262,57 +334,60 @@ const EmailInterface = () => {
                             </Button>
                         </div> */}
                         <div className="max-w-5xl mx-auto">
-                            <Select onValueChange={(value: any) => handleSelectContacts(value)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select recipients" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {contacts.reduce((uniqueTags: string[], contact) => {
-                                        const contactTags = contact.tags as string;
-                                        contactTags?.split(',').forEach((tag: string) => {
-                                            const trimmedTag = tag.trim();
-                                            if (trimmedTag && !uniqueTags.includes(trimmedTag)) {
-                                                uniqueTags.push(trimmedTag);
-                                            }
-                                        });
-                                        return uniqueTags;
-                                    }, []).map((tag: string) => (
-                                        <SelectItem key={tag} value={tag}>
-                                            {tag}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div className="mb-4">
+                                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                                    Select Recipients by Tag
+                                </label>
+                                <Select onValueChange={(value: any) => handleSelectContacts(value)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Choose a tag to select contacts" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {contacts.reduce((uniqueTags: string[], contact) => {
+                                            const contactTags = contact.tags as string;
+                                            contactTags?.split(',').forEach((tag: string) => {
+                                                const trimmedTag = tag.trim();
+                                                if (trimmedTag && !uniqueTags.includes(trimmedTag)) {
+                                                    uniqueTags.push(trimmedTag);
+                                                }
+                                            });
+                                            return uniqueTags;
+                                        }, []).map((tag: string) => {
+                                            const tagContacts = contacts.filter(contact =>
+                                                contact.tags?.includes(tag)
+                                            );
+                                            return (
+                                                <SelectItem key={tag} value={tag}>
+                                                    <div className="flex justify-between items-center w-full">
+                                                        <span>{tag}</span>
+                                                        <span className="text-xs text-gray-500 ml-2">
+                                                            ({tagContacts.length} contact{tagContacts.length !== 1 ? 's' : ''})
+                                                        </span>
+                                                    </div>
+                                                </SelectItem>
+                                            );
+                                        })}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
                         {selectedContacts.length > 0 && (
-                            <div className="flex justify-center mt-4">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead>Email</TableHead>
-                                            <TableHead>Phone</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {selectedContacts.slice(0, 5).map((contact) => (
-                                            <TableRow key={contact.id}>
-                                                <TableCell>{contact.name}</TableCell>
-                                                <TableCell>{contact.email}</TableCell>
-                                                <TableCell>{contact?.phone}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                        {selectedContacts.length > 5 && (
-                                            <TableRow>
-                                                <TableCell>
-                                                    <span className="text-gray-500">
-                                                        + {selectedContacts.length - 5} more
-                                                    </span>
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
+                            <div className="mt-4">
+                                <div className="flex justify-between items-center mb-4">
+                                    <div className="text-sm text-gray-600">
+                                        <strong>{selectedContacts.length}</strong> contact{selectedContacts.length !== 1 ? 's' : ''} selected
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setSelectedContacts([])}
+                                    >
+                                        Clear Selection
+                                    </Button>
+                                </div>
+                                <div className="flex justify-center">
+                                    <ContactTable contacts={selectedContacts} />
+                                </div>
                             </div>
                         )}
                     </div>

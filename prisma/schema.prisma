@@ -23,6 +23,7 @@ model Campaign {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  emails    Email[]
 }
 
 model EmailTemplate {
@@ -33,9 +34,42 @@ model EmailTemplate {
 }
 
 model Email {
-  id        String   @id @default(cuid())
-  subject   String
-  content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String    @id @default(cuid())
+  subject    String
+  content    String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  campaignId String?
+  campaign   Campaign? @relation(fields: [campaignId], references: [id])
+}
+
+model EmailLog {
+  id            String      @id @default(cuid())
+  campaignId    String?
+  recipient     String
+  recipientName String?
+  subject       String
+  content       String
+  status        EmailStatus
+  provider      String?
+  providerId    String?
+  error         String?
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  openedAt      DateTime?
+  clickedAt     DateTime?
+  bouncedAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+  NOT_SENT
 }

@@ -27,11 +27,16 @@ const EmailInterface = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
-    let template = null;
-    if (typeof window !== 'undefined') {
-        template = localStorage?.getItem('template');
-    }
+    const [template, setTemplate] = useState<string | null>(null);
+    const [isClient, setIsClient] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        // Set client-side flag and load template from localStorage
+        setIsClient(true);
+        const savedTemplate = localStorage?.getItem('template');
+        setTemplate(savedTemplate);
+    }, []);
 
     useEffect(() => {
         const fetchContacts = async () => {
@@ -55,16 +60,23 @@ const EmailInterface = () => {
         fetchContacts();
     }, []);
 
-    const emailTemplate = JSON.parse(template || '{}');
+    // Show loading state while client-side hydration is happening
+    if (!isClient) {
+        return <div className="flex justify-center items-center h-screen">
+            <div className="text-center">
+                <p className="text-gray-500">Loading...</p>
+            </div>
+        </div>
+    }
+
+    const emailTemplate = template ? JSON.parse(template) : null;
     if (!emailTemplate || !emailTemplate.subject || !emailTemplate.content) {
         return <div className="flex justify-center items-center h-screen">
-            <div className="flex justify-center items-center h-screen">
-                <div className="text-center">
-                    <p className="text-gray-500">No email template selected.</p>
-                    <Button onClick={() => router.push('/campaigns')} className="mt-4">
-                        Go Back to Template Selection
-                    </Button>
-                </div>
+            <div className="text-center">
+                <p className="text-gray-500">No email template selected.</p>
+                <Button onClick={() => router.push('/campaigns')} className="mt-4">
+                    Go Back to Template Selection
+                </Button>
             </div>
         </div>
     }
@@ -82,9 +94,8 @@ const EmailInterface = () => {
             //         content: personalizedContent
             //     }
             // })
-            console.log(`${process.env.NEXT_PUBLIC_API_URL_LOCAL}/send-email`);
-            // console.log("recipients", selectedContacts.map(contact => contact.email));
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_LOCAL}/send-email`, {
+            console.log("Sending email to:", selectedContacts.map(contact => contact.email));
+            const response = await fetch('/api/send-email', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -96,13 +107,58 @@ const EmailInterface = () => {
                     content: emailTemplate.content
                 })
             });
+            if (!response.ok) {
+                const errorData = await response.json();
+
+                // Handle different types of errors with specific messages
+                if (response.status === 503) {
+                    // Email service not configured
+                    toast({
+                        title: "Email Service Not Configured",
+                        description: errorData.message || "Please configure an email service to send emails.",
+                        variant: "destructive",
+                    });
+                    return;
+                } else if (response.status === 501) {
+                    // Email service not implemented
+                    toast({
+                        title: "Email Service Not Implemented",
+                        description: "Email service is configured but not yet implemented. Please contact support.",
+                        variant: "destructive",
+                    });
+                    return;
+                } else {
+                    // Other errors
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+            }
+
             const data = await response.json();
-            console.log('data', data);
-            toast({
-                title: "Email sent",
-                description: "Email sent successfully.",
-                variant: "default",
-            })
+            console.log('Email sending result:', data);
+
+            if (data.success) {
+                const { successfulSends, failedSends, invalidEmails } = data.details;
+                let message = data.message;
+
+                if (failedSends > 0) {
+                    message += ` (${failedSends} failed)`;
+                }
+                if (invalidEmails.length > 0) {
+                    message += ` (${invalidEmails.length} invalid emails)`;
+                }
+
+                toast({
+                    title: "Email sent",
+                    description: message,
+                    variant: "default",
+                });
+            } else {
+                toast({
+                    title: "Email Not Sent",
+                    description: data.message || "Email was not sent. Please check the configuration.",
+                    variant: "destructive",
+                });
+            }
         } catch (error: any) {
             toast({
                 title: "Error sending email",
@@ -214,8 +270,9 @@ const EmailInterface = () => {
                                     {contacts.reduce((uniqueTags: string[], contact) => {
                                         const contactTags = contact.tags as string;
                                         contactTags?.split(',').forEach((tag: string) => {
-                                            if (!uniqueTags.includes(tag)) {
-                                                uniqueTags.push(tag);
+                                            const trimmedTag = tag.trim();
+                                            if (trimmedTag && !uniqueTags.includes(trimmedTag)) {
+                                                uniqueTags.push(trimmedTag);
                                             }
                                         });
                                         return uniqueTags;

@@ -1,10 +1,35 @@
+"use client";
+
 import { ArrowRight, Mail, Users, BarChart3, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Link from 'next/link';
 import { Cover } from '@/components/ui/cover';
+import { useAuth } from "@/contexts/auth-context";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d86dfc]"></div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return null; // Will redirect to campaigns
+  }
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-purple-50">
       {/* Hero Section */}
@@ -27,16 +52,15 @@ export default function Home() {
               Streamline your email campaigns, engage your audience, and drive results with our intuitive email marketing platform.
             </p>
             <div className="flex justify-center gap-4">
-              <Link href="/contacts">
+              <Link href="/login">
                 <Button size="lg" className="bg-[#d86dfc] hover:bg-[#c44ee7] text-white">
-                  Manage Contacts
-                  <Users className="ml-2 h-5 w-5" />
+                  Get Started
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Link href="/campaigns">
+              <Link href="/login">
                 <Button size="lg" variant="outline" className="border-[#d86dfc] text-[#d86dfc] hover:bg-[#d86dfc] hover:text-white">
-                  Create Campaign
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  Login
                 </Button>
               </Link>
             </div>
@@ -97,10 +121,12 @@ export default function Home() {
           <h2 className="text-3xl font-bold text-white mb-8">
             Ready to Transform Your Email Marketing?
           </h2>
-          <Button size="lg" variant="secondary" className="bg-white text-[#d86dfc] hover:bg-gray-100">
-            Get Started Now
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
+          <Link href="/login">
+            <Button size="lg" variant="secondary" className="bg-white text-[#d86dfc] hover:bg-gray-100">
+              Get Started Now
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
         </div>
       </div>
 

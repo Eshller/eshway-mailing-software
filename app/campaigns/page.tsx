@@ -45,6 +45,7 @@ function CampaignsPageContent() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasBuilderContent, setHasBuilderContent] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<any>(null);
 
   const handleTemplateChange = (templateId: string) => {
     const template = allTemplates.find((t) => t.id === templateId) || allTemplates[0];
@@ -75,7 +76,16 @@ function CampaignsPageContent() {
       if (response.ok) {
         const templates = await response.json();
         setCustomTemplates(templates);
-        setAllTemplates([...emailTemplates, ...templates]);
+        const allTemplatesList = [...emailTemplates, ...templates];
+        setAllTemplates(allTemplatesList);
+
+        // After templates are loaded, restore template if editing
+        if (editingCampaign && editingCampaign.templateId) {
+          const originalTemplate = allTemplatesList.find(t => t.id === editingCampaign.templateId);
+          if (originalTemplate) {
+            setSelectedTemplate(originalTemplate);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching custom templates:', error);
@@ -90,41 +100,64 @@ function CampaignsPageContent() {
     setSelectedTemplate(emailTemplates[0]);
     setSubject(emailTemplates[0].subject);
     setContent(emailTemplates[0].content);
+    // Clear editing state
+    setEditingCampaign(null);
   };
 
   const handleSend = async () => {
     setIsLoading(true);
     try {
-      // Create campaign in database
-      const campaignResponse = await fetch('/api/campaigns', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: subject, // Use subject as campaign name
-          subject,
-          content,
-        }),
-      });
+      let campaignResponse;
+
+      if (editingCampaign) {
+        // Update existing campaign
+        campaignResponse = await fetch(`/api/campaigns/${editingCampaign.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: subject, // Use subject as campaign name
+            subject,
+            content,
+            templateId: selectedTemplate.id,
+            templateName: selectedTemplate.name,
+          }),
+        });
+      } else {
+        // Create new campaign
+        campaignResponse = await fetch('/api/campaigns', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: subject, // Use subject as campaign name
+            subject,
+            content,
+            templateId: selectedTemplate.id,
+            templateName: selectedTemplate.name,
+          }),
+        });
+      }
 
       if (campaignResponse.ok) {
         localStorage.setItem('template', JSON.stringify({ ...selectedTemplate, subject, content }));
         router.push(`/campaigns/preview`);
         toast({
-          title: "Campaign created successfully!",
+          title: editingCampaign ? "Campaign updated successfully!" : "Campaign created successfully!",
           description: "You can now preview and send your campaign.",
         });
       } else {
-        throw new Error('Failed to create campaign');
+        throw new Error(editingCampaign ? 'Failed to update campaign' : 'Failed to create campaign');
       }
     } catch (error) {
       toast({
-        title: "Error creating campaign",
+        title: editingCampaign ? "Error updating campaign" : "Error creating campaign",
         description: "Please try again.",
         variant: "destructive",
       });
-      console.error("Error creating campaign:", error);
+      console.error(editingCampaign ? "Error updating campaign:" : "Error creating campaign:", error);
     } finally {
       setIsLoading(false);
     }
@@ -150,6 +183,23 @@ function CampaignsPageContent() {
             subject: parsed.subject,
             content: parsed.content
           });
+
+          // Check if this is an existing campaign being edited
+          if (parsed.id && parsed.name && parsed.id !== 'custom') {
+            setEditingCampaign({
+              id: parsed.id,
+              name: parsed.name,
+              subject: parsed.subject,
+              content: parsed.content,
+              templateId: parsed.templateId,
+              templateName: parsed.templateName
+            });
+
+            // Store template info for later restoration when allTemplates is loaded
+            if (parsed.templateId) {
+              // We'll restore the template in a separate useEffect when allTemplates is ready
+            }
+          }
         }
       }
     } catch (error) {
@@ -189,6 +239,7 @@ function CampaignsPageContent() {
       }
     } catch (_) { }
   }, [searchParams]);
+
 
   return (
     <div className="space-y-6">
@@ -314,10 +365,10 @@ function CampaignsPageContent() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating Campaign...
+                      {editingCampaign ? "Updating Campaign..." : "Creating Campaign..."}
                     </>
                   ) : (
-                    "Send Campaign"
+                    editingCampaign ? "Update Campaign" : "Send Campaign"
                   )}
                 </Button>
               </div>

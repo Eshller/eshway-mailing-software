@@ -12,7 +12,8 @@ import {
     Mail,
     Calendar,
     Users,
-    Loader2
+    Loader2,
+    FileText
 } from 'lucide-react';
 import {
     DropdownMenu,
@@ -75,7 +76,9 @@ export function CampaignsList() {
                 subject: email.subject,
                 content: email.content,
                 html: email.content,
-                css: ''
+                css: '',
+                templateId: campaign.templateId,
+                templateName: campaign.templateName
             }));
             router.push('/campaigns?mode=create');
         } else {
@@ -188,6 +191,12 @@ export function CampaignsList() {
                                         <Mail className="h-4 w-4" />
                                         {campaign.emails.length} email(s)
                                     </div>
+                                    {campaign.templateName && (
+                                        <div className="flex items-center gap-1">
+                                            <FileText className="h-4 w-4" />
+                                            {campaign.templateName}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">

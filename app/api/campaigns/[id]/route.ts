@@ -3,6 +3,61 @@ import prisma from '@/lib/prisma';
 
 export const dynamic = "force-dynamic";
 
+export async function PUT(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const campaignId = params.id;
+        const body = await req.json();
+        const { name, subject, content, templateId, templateName } = body;
+
+        if (!campaignId) {
+            return NextResponse.json(
+                { error: "Campaign ID is required." },
+                { status: 400 }
+            );
+        }
+
+        if (!name || !subject || !content) {
+            return NextResponse.json(
+                { error: "Name, subject, and content are required." },
+                { status: 400 }
+            );
+        }
+
+        // Update the campaign and its associated email
+        const updatedCampaign = await prisma.campaign.update({
+            where: { id: campaignId },
+            data: {
+                name,
+                templateId: templateId || null,
+                templateName: templateName || null,
+                emails: {
+                    updateMany: {
+                        where: { campaignId },
+                        data: {
+                            subject,
+                            content,
+                        },
+                    },
+                },
+            },
+            include: {
+                emails: true,
+            },
+        });
+
+        return NextResponse.json(updatedCampaign);
+    } catch (error) {
+        console.error("Error updating campaign:", error);
+        return NextResponse.json(
+            { error: "Internal server error while updating campaign." },
+            { status: 500 }
+        );
+    }
+}
+
 export async function DELETE(
     req: NextRequest,
     { params }: { params: { id: string } }

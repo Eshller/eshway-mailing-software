@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { name, subject, content } = body;
+        const { name, subject, content, templateId, templateName } = body;
 
         if (!name || !subject || !content) {
             return NextResponse.json(
@@ -18,6 +18,8 @@ export async function POST(req: Request) {
         const campaign = await prisma.campaign.create({
             data: {
                 name,
+                templateId: templateId || null,
+                templateName: templateName || null,
                 emails: {
                     create: {
                         subject,

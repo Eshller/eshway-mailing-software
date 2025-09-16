@@ -19,11 +19,13 @@ model Contact {
 }
 
 model Campaign {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  emails    Email[]
+  id           String   @id @default(cuid())
+  name         String
+  templateId   String? // Reference to the template used
+  templateName String? // Store template name for display
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  emails       Email[]
 }
 
 model EmailTemplate {

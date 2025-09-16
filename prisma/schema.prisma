@@ -19,13 +19,15 @@ model Contact {
 }
 
 model Campaign {
-  id           String   @id @default(cuid())
+  id           String             @id @default(cuid())
   name         String
   templateId   String? // Reference to the template used
   templateName String? // Store template name for display
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
   emails       Email[]
+  emailLogs    EmailLog[]
+  analytics    CampaignAnalytics?
 }
 
 model EmailTemplate {
@@ -48,8 +50,9 @@ model Email {
 }
 
 model EmailLog {
-  id            String      @id @default(cuid())
+  id            String       @id @default(cuid())
   campaignId    String?
+  campaign      Campaign?    @relation(fields: [campaignId], references: [id])
   recipient     String
   recipientName String?
   subject       String
@@ -63,8 +66,21 @@ model EmailLog {
   openedAt      DateTime?
   clickedAt     DateTime?
   bouncedAt     DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  repliedAt     DateTime? // When recipient replied
+  replyContent  String? // Store reply content
+  isReplied     Boolean      @default(false) // Quick reply check
+  replyStatus   ReplyStatus? // Reply categorization
+  openCount     Int          @default(0) // Track multiple opens
+  clickCount    Int          @default(0) // Track multiple clicks
+  lastOpenedAt  DateTime? // Most recent open
+  lastClickedAt DateTime? // Most recent click
+  userAgent     String? // Track device/browser
+  ipAddress     String? // Track location
+  location      String? // Geographic location
+  device        String? // Mobile/Desktop/Tablet
+  browser       String? // Browser type
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 enum EmailStatus {
@@ -76,4 +92,86 @@ enum EmailStatus {
   BOUNCED
   FAILED
   NOT_SENT
+  REPLIED
+}
+
+enum ReplyStatus {
+  POSITIVE
+  NEGATIVE
+  NEUTRAL
+  QUESTION
+  UNSUBSCRIBE
+  SPAM
+  INTERESTED
+  NOT_INTERESTED
+  FOLLOW_UP_NEEDED
+}
+
+// Campaign Analytics Model
+model CampaignAnalytics {
+  id                String   @id @default(cuid())
+  campaignId        String   @unique
+  campaign          Campaign @relation(fields: [campaignId], references: [id])
+  totalSent         Int      @default(0)
+  totalDelivered    Int      @default(0)
+  totalOpened       Int      @default(0)
+  totalClicked      Int      @default(0)
+  totalReplied      Int      @default(0)
+  totalBounced      Int      @default(0)
+  totalFailed       Int      @default(0)
+  openRate          Float    @default(0.0)
+  clickRate         Float    @default(0.0)
+  replyRate         Float    @default(0.0)
+  bounceRate        Float    @default(0.0)
+  deliveryRate      Float    @default(0.0)
+  avgResponseTime   Float? // Average time to reply in hours
+  bestPerformingDay String? // Day of week with best performance
+  lastCalculatedAt  DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// Template Performance Model
+model TemplatePerformance {
+  id                String    @id @default(cuid())
+  templateId        String    @unique
+  templateName      String
+  totalSent         Int       @default(0)
+  totalOpened       Int       @default(0)
+  totalClicked      Int       @default(0)
+  totalReplied      Int       @default(0)
+  openRate          Float     @default(0.0)
+  clickRate         Float     @default(0.0)
+  replyRate         Float     @default(0.0)
+  avgResponseTime   Float? // Average time to reply in hours
+  bestPerformingDay String? // Day of week with best performance
+  lastUsedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+// Email Sequence Model for follow-ups
+model EmailSequence {
+  id          String              @id @default(cuid())
+  name        String
+  description String?
+  steps       EmailSequenceStep[]
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model EmailSequenceStep {
+  id         String        @id @default(cuid())
+  sequenceId String
+  sequence   EmailSequence @relation(fields: [sequenceId], references: [id])
+  stepOrder  Int
+  delayHours Int // Hours to wait before sending
+  templateId String?
+  subject    String
+  content    String
+  conditions Json? // Conditions for sending this step
+  isActive   Boolean       @default(true)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 }

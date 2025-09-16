@@ -15,6 +15,7 @@ export interface EmailData {
     names: string[];
     subject: string;
     content: string;
+    campaignId?: string;
     fromEmail?: string;
     fromName?: string;
 }
@@ -43,9 +44,15 @@ export class EmailService {
             const name = emailData.names[i] || 'Valued Customer';
 
             try {
+                // Create email log first to get the ID for tracking
+                const emailLog = await this.createEmailLog(recipient, name, emailData.subject, emailData.content, emailData.campaignId);
+
                 // Format content with proper line breaks and then personalize
                 const formattedContent = this.formatTextToHtml(emailData.content);
                 const personalizedContent = this.personalizeContent(formattedContent, name);
+
+                // Add tracking to the content using the email log ID
+                const trackedContent = this.addTrackingToContent(personalizedContent, emailLog.id);
 
                 // Create email command
                 const command = new SendEmailCommand({
@@ -60,7 +67,7 @@ export class EmailService {
                         },
                         Body: {
                             Html: {
-                                Data: personalizedContent,
+                                Data: trackedContent,
                                 Charset: 'UTF-8',
                             },
                             Text: {
@@ -74,8 +81,8 @@ export class EmailService {
                 // Send email
                 const response = await sesClient.send(command);
 
-                // Log successful send
-                await this.logEmailStatus(recipient, name, emailData.subject, emailData.content, 'SENT', response.MessageId);
+                // Update email log with success status
+                await this.updateEmailLogStatus(emailLog.id, 'SENT', response.MessageId);
 
                 results.push({
                     success: true,
@@ -88,7 +95,7 @@ export class EmailService {
             } catch (error) {
                 console.error(`Failed to send email to ${recipient}:`, error);
 
-                // Log failed send
+                // Log failed send using the existing logEmailStatus method
                 await this.logEmailStatus(recipient, name, emailData.subject, emailData.content, 'FAILED', undefined, error instanceof Error ? error.message : 'Unknown error');
 
                 results.push({
@@ -118,6 +125,23 @@ export class EmailService {
             .replace(/\[Last Name\]/g, name.split(' ').slice(1).join(' '));
     }
 
+    private addTrackingToContent(content: string, campaignId?: string): string {
+        // Add open tracking pixel
+        const trackingPixel = `<img src="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/track/open/${campaignId}" width="1" height="1" style="display:none;" />`;
+
+        // Add click tracking to all links
+        const trackedContent = content.replace(
+            /<a\s+([^>]*?)href=["']([^"']+)["']([^>]*?)>/gi,
+            (match, beforeHref, url, afterHref) => {
+                const trackedUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/track/click/${campaignId}?url=${encodeURIComponent(url)}`;
+                return `<a ${beforeHref}href="${trackedUrl}"${afterHref}>`;
+            }
+        );
+
+        // Add tracking pixel at the end of the content
+        return trackedContent + trackingPixel;
+    }
+
     private stripHtml(html: string): string {
         return html
             .replace(/<[^>]*>/g, '') // Remove HTML tags
@@ -128,6 +152,56 @@ export class EmailService {
             .replace(/&quot;/g, '"') // Replace &quot; with "
             .replace(/&#39;/g, "'") // Replace &#39; with '
             .trim();
+    }
+
+    private async createEmailLog(
+        recipient: string,
+        recipientName: string,
+        subject: string,
+        content: string,
+        campaignId?: string
+    ): Promise<any> {
+        try {
+            const emailLog = await prisma.emailLog.create({
+                data: {
+                    recipient,
+                    recipientName,
+                    subject,
+                    content,
+                    status: 'PENDING',
+                    provider: 'AWS SES',
+                    campaignId,
+                },
+            });
+            return emailLog;
+        } catch (error) {
+            console.error('Error creating email log:', error);
+            throw error;
+        }
+    }
+
+    private async updateEmailLogStatus(
+        emailLogId: string,
+        status: string,
+        providerId?: string,
+        error?: string
+    ): Promise<void> {
+        try {
+            const updateData: any = {
+                status: status as any,
+            };
+
+            if (providerId) updateData.providerId = providerId;
+            if (error) updateData.error = error;
+            if (status === 'SENT') updateData.sentAt = new Date();
+
+            await prisma.emailLog.update({
+                where: { id: emailLogId },
+                data: updateData,
+            });
+        } catch (error) {
+            console.error('Error updating email log status:', error);
+        }
     }
 
     private async logEmailStatus(

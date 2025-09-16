@@ -18,7 +18,7 @@ function isEmailServiceConfigured(): boolean {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { recipients, name, subject, content } = body;
+        const { recipients, name, subject, content, campaignId } = body;
 
         if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
             return NextResponse.json(
@@ -101,6 +101,7 @@ export async function POST(req: NextRequest) {
             names: validNames,
             subject,
             content,
+            campaignId,
         });
 
         // Count successful and failed sends

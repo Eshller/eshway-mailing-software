@@ -184,7 +184,8 @@ const EmailInterface = () => {
                     recipients: selectedContacts.map(contact => contact.email),
                     name: selectedContacts.map(contact => contact.name),
                     subject: emailTemplate.subject,
-                    content: emailTemplate.content
+                    content: emailTemplate.content,
+                    campaignId: emailTemplate.campaignId
                 })
             });
             if (!response.ok) {

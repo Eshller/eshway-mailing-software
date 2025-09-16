@@ -142,7 +142,13 @@ function CampaignsPageContent() {
       }
 
       if (campaignResponse.ok) {
-        localStorage.setItem('template', JSON.stringify({ ...selectedTemplate, subject, content }));
+        const campaignData = await campaignResponse.json();
+        localStorage.setItem('template', JSON.stringify({
+          ...selectedTemplate,
+          subject,
+          content,
+          campaignId: campaignData.id || editingCampaign?.id
+        }));
         router.push(`/campaigns/preview`);
         toast({
           title: editingCampaign ? "Campaign updated successfully!" : "Campaign created successfully!",

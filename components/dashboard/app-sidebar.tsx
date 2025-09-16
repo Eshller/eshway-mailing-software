@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Mail, Users, BarChart3, Settings, LogOut } from "lucide-react";
+import { Mail, Users, BarChart3, Settings, LogOut, PieChart } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -22,7 +22,7 @@ const data = {
         {
             title: "Dashboard",
             url: "/dashboard",
-            icon: BarChart3,
+            icon: PieChart,
         },
         {
             title: "Campaigns",
@@ -33,6 +33,11 @@ const data = {
             title: "Contacts",
             url: "/contacts",
             icon: Users,
+        },
+        {
+            title: "Analytics",
+            url: "/analytics",
+            icon: BarChart3,
         },
     ],
     navSecondary: [

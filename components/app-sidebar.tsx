@@ -12,6 +12,10 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  BarChart3,
+  Mail,
+  Users,
+  FileText,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -52,87 +56,78 @@ const data = {
   ],
   navMain: [
     {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: PieChart,
       isActive: true,
+    },
+    {
+      title: "Campaigns",
+      url: "/campaigns",
+      icon: Mail,
       items: [
         {
-          title: "History",
-          url: "#",
+          title: "All Campaigns",
+          url: "/campaigns",
         },
         {
-          title: "Starred",
-          url: "#",
+          title: "Create Campaign",
+          url: "/campaigns?mode=create",
         },
         {
-          title: "Settings",
-          url: "#",
+          title: "Templates",
+          url: "/campaigns?mode=create",
         },
       ],
     },
     {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
+      title: "Contacts",
+      url: "/contacts",
+      icon: Users,
     },
     {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
+      title: "Analytics",
+      url: "/analytics",
+      icon: BarChart3,
       items: [
         {
-          title: "Introduction",
-          url: "#",
+          title: "Overview",
+          url: "/analytics",
         },
         {
-          title: "Get Started",
-          url: "#",
+          title: "Campaign Performance",
+          url: "/analytics?tab=campaigns",
         },
         {
-          title: "Tutorials",
-          url: "#",
+          title: "Reply Tracking",
+          url: "/analytics?tab=replies",
         },
         {
-          title: "Changelog",
-          url: "#",
+          title: "Template Analytics",
+          url: "/analytics?tab=templates",
+        },
+        {
+          title: "Deliverability",
+          url: "/analytics?tab=deliverability",
         },
       ],
     },
     {
       title: "Settings",
-      url: "#",
+      url: "/settings",
       icon: Settings2,
       items: [
         {
           title: "General",
-          url: "#",
+          url: "/settings",
         },
         {
-          title: "Team",
-          url: "#",
+          title: "Email Configuration",
+          url: "/settings/email",
         },
         {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
+          title: "Templates",
+          url: "/settings/templates",
         },
       ],
     },

@@ -49,6 +49,11 @@ export async function GET() {
         const campaigns = await prisma.campaign.findMany({
             include: {
                 emails: true, // Include associated emails
+                emailLogs: {
+                    where: {
+                        isTestEmail: false // Exclude test emails from count
+                    }
+                }
             },
             orderBy: {
                 createdAt: 'desc',

@@ -3,8 +3,12 @@ import prisma from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
     try {
-        // Get all email logs and calculate analytics
-        const emailLogs = await prisma.emailLog.findMany();
+        // Get all email logs and calculate analytics (exclude test emails)
+        const emailLogs = await prisma.emailLog.findMany({
+            where: {
+                isTestEmail: false
+            }
+        });
 
         const totalSent = emailLogs.length;
         const totalDelivered = emailLogs.filter(log => log.status === 'DELIVERED' || log.status === 'SENT').length;
@@ -30,6 +34,7 @@ export async function GET(req: NextRequest) {
                 createdAt: {
                     gte: sevenDaysAgo,
                 },
+                isTestEmail: false, // Exclude test emails from recent activity
             },
             orderBy: {
                 createdAt: 'desc',

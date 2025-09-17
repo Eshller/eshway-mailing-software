@@ -223,7 +223,11 @@ export function ReplyTrackingKanban() {
             const response = await fetch('/api/email-logs');
             if (response.ok) {
                 const data = await response.json();
+                console.log('Fetched emails:', data.emailLogs?.length, 'emails');
+                console.log('Sample email:', data.emailLogs?.[0]);
                 setEmails(data.emailLogs || []);
+            } else {
+                console.error('Failed to fetch emails:', response.status);
             }
         } catch (error) {
             console.error('Error fetching emails:', error);
@@ -239,6 +243,14 @@ export function ReplyTrackingKanban() {
 
     useEffect(() => {
         fetchEmails();
+
+        // Set up automatic refresh every 30 seconds
+        const interval = setInterval(() => {
+            fetchEmails();
+        }, 30000);
+
+        // Cleanup interval on unmount
+        return () => clearInterval(interval);
     }, []);
 
     const updateReply = async (emailId: string, replyStatus: string, replyContent: string) => {
@@ -256,7 +268,23 @@ export function ReplyTrackingKanban() {
             });
 
             if (response.ok) {
-                fetchEmails(); // Refresh data
+                const result = await response.json();
+                console.log('Reply update successful:', result);
+                console.log('Refreshing emails after update...');
+                await fetchEmails(); // Refresh data
+                console.log('Emails refreshed');
+                toast({
+                    title: "Success",
+                    description: "Reply status updated successfully.",
+                });
+            } else {
+                const errorData = await response.json();
+                console.error('Reply update failed:', errorData);
+                toast({
+                    title: "Error",
+                    description: errorData.error || "Failed to update reply status.",
+                    variant: "destructive",
+                });
             }
         } catch (error) {
             console.error('Error updating reply:', error);

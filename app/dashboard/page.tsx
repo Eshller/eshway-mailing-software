@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, Users, BarChart3, Plus, Loader2 } from "lucide-react";
+import { Mail, Users, BarChart3, Plus, Loader2, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { ProtectedRoute } from "@/components/protected-route";
@@ -33,22 +33,40 @@ function DashboardContent() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  const fetchDashboardData = async (isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
+
+    try {
+      const response = await fetch('/api/dashboard');
+      const data = await response.json();
+      setStats(data.stats);
+      setRecentActivity(data.recentActivity);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const response = await fetch('/api/dashboard');
-        const data = await response.json();
-        setStats(data.stats);
-        setRecentActivity(data.recentActivity);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchDashboardData();
+
+    // Set up automatic refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 30000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
   }, []);
 
   if (isLoading) {
@@ -61,11 +79,28 @@ function DashboardContent() {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Welcome to Mailway</h2>
-        <p className="text-muted-foreground">
-          Manage your email campaigns and contacts from one place.
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Welcome to Mailway</h2>
+          <p className="text-muted-foreground">
+            Manage your email campaigns and contacts from one place.
+          </p>
+          {lastUpdated && (
+            <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              Live data • Last updated: {lastUpdated.toLocaleString()}
+            </div>
+          )}
+        </div>
+        <Button
+          onClick={() => fetchDashboardData(true)}
+          variant="outline"
+          size="sm"
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </div>
 
       {/* Quick Stats */}

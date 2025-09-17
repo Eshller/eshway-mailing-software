@@ -5,21 +5,33 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
     try {
-        // Get basic deliverability metrics
+        // Get basic deliverability metrics (exclude test emails)
         const totalSent = await prisma.emailLog.count({
-            where: { status: { in: ['SENT', 'DELIVERED', 'OPENED', 'CLICKED', 'REPLIED', 'BOUNCED'] } }
+            where: {
+                status: { in: ['SENT', 'DELIVERED', 'OPENED', 'CLICKED', 'REPLIED', 'BOUNCED'] },
+                isTestEmail: false
+            }
         });
 
         const totalDelivered = await prisma.emailLog.count({
-            where: { status: { in: ['DELIVERED', 'OPENED', 'CLICKED', 'REPLIED'] } }
+            where: {
+                status: { in: ['DELIVERED', 'OPENED', 'CLICKED', 'REPLIED'] },
+                isTestEmail: false
+            }
         });
 
         const totalBounced = await prisma.emailLog.count({
-            where: { status: 'BOUNCED' }
+            where: {
+                status: 'BOUNCED',
+                isTestEmail: false
+            }
         });
 
         const totalFailed = await prisma.emailLog.count({
-            where: { status: 'FAILED' }
+            where: {
+                status: 'FAILED',
+                isTestEmail: false
+            }
         });
 
         // Calculate rates
@@ -27,9 +39,12 @@ export async function GET() {
         const bounceRate = totalSent > 0 ? (totalBounced / totalSent) * 100 : 0;
         const failureRate = totalSent > 0 ? (totalFailed / totalSent) * 100 : 0;
 
-        // Get recent bounces with details
+        // Get recent bounces with details (exclude test emails)
         const recentBounces = await prisma.emailLog.findMany({
-            where: { status: 'BOUNCED' },
+            where: {
+                status: 'BOUNCED',
+                isTestEmail: false
+            },
             select: {
                 recipient: true,
                 error: true,

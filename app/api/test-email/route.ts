@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
                 <p>If you received this email, your AWS SES configuration is working correctly!</p>
                 <p>Best regards,<br>Mailway Team</p>
             `,
+            isTestEmail: true, // Mark as test email to exclude from analytics
         });
 
         const result = results[0];

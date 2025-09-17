@@ -18,6 +18,7 @@ export interface EmailData {
     campaignId?: string;
     fromEmail?: string;
     fromName?: string;
+    isTestEmail?: boolean;
 }
 
 export interface EmailResult {
@@ -45,7 +46,7 @@ export class EmailService {
 
             try {
                 // Create email log first to get the ID for tracking
-                const emailLog = await this.createEmailLog(recipient, name, emailData.subject, emailData.content, emailData.campaignId);
+                const emailLog = await this.createEmailLog(recipient, name, emailData.subject, emailData.content, emailData.campaignId, emailData.isTestEmail);
 
                 // Format content with proper line breaks and then personalize
                 const formattedContent = this.formatTextToHtml(emailData.content);
@@ -159,7 +160,8 @@ export class EmailService {
         recipientName: string,
         subject: string,
         content: string,
-        campaignId?: string
+        campaignId?: string,
+        isTestEmail?: boolean
     ): Promise<any> {
         try {
             const emailLog = await prisma.emailLog.create({
@@ -171,6 +173,7 @@ export class EmailService {
                     status: 'PENDING',
                     provider: 'AWS SES',
                     campaignId,
+                    isTestEmail: isTestEmail || false,
                 },
             });
             return emailLog;

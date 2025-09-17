@@ -37,6 +37,9 @@ interface Campaign {
     createdAt: string;
     updatedAt: string;
     emails: Email[];
+    emailLogs?: Array<{ id: string }>; // Add emailLogs to track actual recipients (optional for backward compatibility)
+    templateId?: string;
+    templateName?: string;
 }
 
 export function CampaignsList() {
@@ -189,7 +192,7 @@ export function CampaignsList() {
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <Mail className="h-4 w-4" />
-                                        {campaign.emails.length} email(s)
+                                        {campaign.emailLogs?.length || 0} email(s)
                                     </div>
                                     {campaign.templateName && (
                                         <div className="flex items-center gap-1">

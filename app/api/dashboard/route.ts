@@ -56,10 +56,21 @@ export async function GET() {
             },
         });
 
-        // Calculate mock open rate and click rate based on available data
-        // In a real app, these would come from email tracking data
-        const mockOpenRate = totalContacts > 0 ? Math.min(25 + Math.random() * 10, 35).toFixed(1) : "0.0";
-        const mockClickRate = totalContacts > 0 ? Math.min(2 + Math.random() * 2, 5).toFixed(1) : "0.0";
+        // Get real analytics data from email logs (exclude test emails)
+        const emailLogs = await prisma.emailLog.findMany({
+            where: {
+                isTestEmail: false
+            }
+        });
+
+        const totalSent = emailLogs.length;
+        const totalDelivered = emailLogs.filter(log => log.status === 'DELIVERED' || log.status === 'SENT').length;
+        const totalOpened = emailLogs.filter(log => log.openedAt).length;
+        const totalClicked = emailLogs.filter(log => log.clickedAt).length;
+
+        // Calculate real rates
+        const openRate = totalDelivered > 0 ? ((totalOpened / totalDelivered) * 100).toFixed(1) : "0.0";
+        const clickRate = totalOpened > 0 ? ((totalClicked / totalOpened) * 100).toFixed(1) : "0.0";
 
         return NextResponse.json({
             stats: {
@@ -67,8 +78,8 @@ export async function GET() {
                 contactsLastMonth,
                 totalCampaigns,
                 campaignsLastMonth,
-                openRate: mockOpenRate,
-                clickRate: mockClickRate,
+                openRate: openRate,
+                clickRate: clickRate,
             },
             recentActivity: {
                 contacts: recentContacts,

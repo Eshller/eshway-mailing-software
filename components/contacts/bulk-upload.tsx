@@ -221,8 +221,8 @@ export function BulkUpload() {
               ))}
               {csvData.length > 5 && (
                 <TableRow>
-                  <TableCell>
-                    <TableCell>+{csvData.length - 5} More</TableCell>
+                  <TableCell colSpan={5} className="text-center text-gray-500">
+                    +{csvData.length - 5} More
                   </TableCell>
                 </TableRow>
               )}

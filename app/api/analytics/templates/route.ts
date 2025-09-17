@@ -33,34 +33,36 @@ export async function GET() {
                 let lastUsedAt: Date | null = null;
 
                 campaigns.forEach(campaign => {
-                    campaign.emailLogs.forEach(log => {
-                        totalSent++;
-                        
-                        if (['DELIVERED', 'OPENED', 'CLICKED', 'REPLIED'].includes(log.status)) {
-                            totalOpened++;
-                        }
-                        if (['CLICKED', 'REPLIED'].includes(log.status)) {
-                            totalClicked++;
-                        }
-                        if (log.isReplied) {
-                            totalReplied++;
-                            if (log.repliedAt && log.sentAt) {
-                                const responseTime = new Date(log.repliedAt).getTime() - new Date(log.sentAt).getTime();
-                                totalResponseTime += responseTime / (1000 * 60 * 60); // Convert to hours
-                                responseCount++;
+                    campaign.emailLogs
+                        .filter(log => !log.isTestEmail) // Exclude test emails
+                        .forEach(log => {
+                            totalSent++;
+                            
+                            if (['DELIVERED', 'OPENED', 'CLICKED', 'REPLIED'].includes(log.status)) {
+                                totalOpened++;
                             }
-                        }
-                        if (log.status === 'BOUNCED') {
-                            totalBounced++;
-                        }
-                        
-                        if (log.sentAt) {
-                            const sentDate = new Date(log.sentAt);
-                            if (!lastUsedAt || sentDate > lastUsedAt) {
-                                lastUsedAt = sentDate;
+                            if (['CLICKED', 'REPLIED'].includes(log.status)) {
+                                totalClicked++;
                             }
-                        }
-                    });
+                            if (log.isReplied) {
+                                totalReplied++;
+                                if (log.repliedAt && log.sentAt) {
+                                    const responseTime = new Date(log.repliedAt).getTime() - new Date(log.sentAt).getTime();
+                                    totalResponseTime += responseTime / (1000 * 60 * 60); // Convert to hours
+                                    responseCount++;
+                                }
+                            }
+                            if (log.status === 'BOUNCED') {
+                                totalBounced++;
+                            }
+                            
+                            if (log.sentAt) {
+                                const sentDate = new Date(log.sentAt);
+                                if (!lastUsedAt || sentDate > lastUsedAt) {
+                                    lastUsedAt = sentDate;
+                                }
+                            }
+                        });
                 });
 
                 // Calculate rates

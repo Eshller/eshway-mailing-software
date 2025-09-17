@@ -60,6 +60,14 @@ export function DeliverabilityMonitor() {
 
     useEffect(() => {
         fetchDeliverabilityData();
+
+        // Set up automatic refresh every 30 seconds
+        const interval = setInterval(() => {
+            fetchDeliverabilityData();
+        }, 30000);
+
+        // Cleanup interval on unmount
+        return () => clearInterval(interval);
     }, []);
 
     const getReputationColor = (reputation: string) => {

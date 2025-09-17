@@ -79,6 +79,7 @@ model EmailLog {
   location      String? // Geographic location
   device        String? // Mobile/Desktop/Tablet
   browser       String? // Browser type
+  isTestEmail   Boolean      @default(false) // Flag to exclude test emails from analytics
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 }
@@ -174,4 +175,20 @@ model EmailSequenceStep {
   isActive   Boolean       @default(true)
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
+}
+
+// Settings Model
+model Settings {
+  id          String   @id @default(cuid())
+  userId      String? // For user-specific settings (optional for now)
+  category    String // 'email', 'notifications', 'appearance', 'security', 'advanced'
+  key         String // Setting key
+  value       String // Setting value (JSON string for complex objects)
+  description String? // Human-readable description
+  isEncrypted Boolean  @default(false) // For sensitive data like API keys
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([category, key])
+  @@index([category])
 }

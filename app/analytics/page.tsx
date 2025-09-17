@@ -45,10 +45,16 @@ interface AnalyticsData {
 function AnalyticsPageContent() {
     const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-    const fetchAnalytics = async () => {
-        setIsLoading(true);
+    const fetchAnalytics = async (isManualRefresh = false) => {
+        if (isManualRefresh) {
+            setIsRefreshing(true);
+        } else {
+            setIsLoading(true);
+        }
+
         try {
             const response = await fetch('/api/analytics');
             if (response.ok) {
@@ -60,11 +66,20 @@ function AnalyticsPageContent() {
             console.error('Error fetching analytics:', error);
         } finally {
             setIsLoading(false);
+            setIsRefreshing(false);
         }
     };
 
     useEffect(() => {
         fetchAnalytics();
+
+        // Set up automatic refresh every 30 seconds
+        const interval = setInterval(() => {
+            fetchAnalytics();
+        }, 30000);
+
+        // Cleanup interval on unmount
+        return () => clearInterval(interval);
     }, []);
 
     if (isLoading) {
@@ -88,14 +103,20 @@ function AnalyticsPageContent() {
                         Track performance, monitor deliverability, and optimize your email campaigns
                     </p>
                     {lastUpdated && (
-                        <p className="text-sm text-gray-500 mt-1">
-                            Last updated: {lastUpdated.toLocaleString()}
-                        </p>
+                        <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            Live data • Last updated: {lastUpdated.toLocaleString()}
+                        </div>
                     )}
                 </div>
-                <Button onClick={fetchAnalytics} variant="outline" size="sm">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Refresh
+                <Button
+                    onClick={() => fetchAnalytics(true)}
+                    variant="outline"
+                    size="sm"
+                    disabled={isRefreshing}
+                >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    {isRefreshing ? 'Refreshing...' : 'Refresh'}
                 </Button>
             </div>
 

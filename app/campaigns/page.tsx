@@ -14,6 +14,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { VariableHelper } from "@/components/ui/variable-helper";
 import { emailTemplates } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
@@ -155,7 +156,49 @@ function CampaignsPageContent() {
           description: "You can now preview and send your campaign.",
         });
       } else {
-        throw new Error(editingCampaign ? 'Failed to update campaign' : 'Failed to create campaign');
+        const errorData = await campaignResponse.json();
+        if (campaignResponse.status === 404) {
+          // Campaign not found, clear editing state and create new
+          setEditingCampaign(null);
+          toast({
+            title: "Campaign not found",
+            description: "The campaign you're trying to edit no longer exists. Creating a new campaign instead.",
+            variant: "destructive",
+          });
+          // Retry as new campaign
+          const newCampaignResponse = await fetch('/api/campaigns', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: subject,
+              subject,
+              content,
+              templateId: selectedTemplate.id,
+              templateName: selectedTemplate.name,
+            }),
+          });
+
+          if (newCampaignResponse.ok) {
+            const newCampaignData = await newCampaignResponse.json();
+            localStorage.setItem('template', JSON.stringify({
+              ...selectedTemplate,
+              subject,
+              content,
+              campaignId: newCampaignData.id
+            }));
+            router.push(`/campaigns/preview`);
+            toast({
+              title: "Campaign created successfully!",
+              description: "You can now preview and send your campaign.",
+            });
+          } else {
+            throw new Error('Failed to create new campaign');
+          }
+        } else {
+          throw new Error(errorData.error || (editingCampaign ? 'Failed to update campaign' : 'Failed to create campaign'));
+        }
       }
     } catch (error) {
       toast({
@@ -352,14 +395,14 @@ function CampaignsPageContent() {
                       />
                     </div>
 
-                    <div>
-                      <Label>Email Content</Label>
-                      <Textarea
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        className="min-h-[300px]"
-                      />
-                    </div>
+                    <VariableHelper
+                      content={content}
+                      onContentChange={setContent}
+                      placeholder="Write your email content here..."
+                      showPreview={false}
+                      showVariableButtons={true}
+                      showAutoComplete={true}
+                    />
                   </div>
                 </Card>
 

@@ -93,6 +93,29 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        // Fetch full contact data for personalization
+        const contacts = await prisma.contact.findMany({
+            where: {
+                email: {
+                    in: validRecipients
+                }
+            }
+        });
+
+        console.log('Fetched contacts for personalization:', contacts.map(c => ({
+            email: c.email,
+            name: c.name,
+            company: c.company,
+            phone: c.phone,
+            tags: c.tags
+        })));
+
+        // Create a map of email to contact data for quick lookup
+        const contactMap = new Map();
+        contacts.forEach(contact => {
+            contactMap.set(contact.email, contact);
+        });
+
         // Send emails using the email service
         console.log(`Sending emails to ${validRecipients.length} valid recipients...`);
 
@@ -102,6 +125,7 @@ export async function POST(req: NextRequest) {
             subject,
             content,
             campaignId,
+            contacts: contacts, // Pass full contact data
         });
 
         // Count successful and failed sends

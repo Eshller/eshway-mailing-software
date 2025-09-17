@@ -19,6 +19,7 @@ export interface EmailData {
     fromEmail?: string;
     fromName?: string;
     isTestEmail?: boolean;
+    contacts?: any[]; // Full contact data for personalization
 }
 
 export interface EmailResult {
@@ -44,13 +45,16 @@ export class EmailService {
             const recipient = emailData.recipients[i];
             const name = emailData.names[i] || 'Valued Customer';
 
+            // Find the contact data for this recipient
+            const contact = emailData.contacts?.find(c => c.email === recipient);
+
             try {
                 // Create email log first to get the ID for tracking
                 const emailLog = await this.createEmailLog(recipient, name, emailData.subject, emailData.content, emailData.campaignId, emailData.isTestEmail);
 
                 // Format content with proper line breaks and then personalize
                 const formattedContent = this.formatTextToHtml(emailData.content);
-                const personalizedContent = this.personalizeContent(formattedContent, name);
+                const personalizedContent = this.personalizeContent(formattedContent, name, contact);
 
                 // Add tracking to the content using the email log ID
                 const trackedContent = this.addTrackingToContent(personalizedContent, emailLog.id);
@@ -117,13 +121,43 @@ export class EmailService {
             .replace(/\r/g, '<br>'); // Convert Mac line breaks
     }
 
-    private personalizeContent(content: string, name: string): string {
-        // Replace common placeholders
-        return content
+    private personalizeContent(content: string, name: string, contact?: any): string {
+        // Extract name parts
+        const nameParts = name.split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+
+        // Get contact data with fallbacks
+        const email = contact?.email || '';
+        const company = contact?.company || '';
+        const phone = contact?.phone || '';
+        const tags = contact?.tags || '';
+
+        console.log('Personalizing content for:', {
+            name,
+            contact: contact ? {
+                email: contact.email,
+                company: contact.company,
+                phone: contact.phone,
+                tags: contact.tags
+            } : 'No contact data',
+            variables: { firstName, lastName, email, company, phone, tags }
+        });
+
+        // Replace all placeholders
+        const personalized = content
             .replace(/\[Recipient Name\]/g, name)
             .replace(/\[Name\]/g, name)
-            .replace(/\[First Name\]/g, name.split(' ')[0])
-            .replace(/\[Last Name\]/g, name.split(' ').slice(1).join(' '));
+            .replace(/\[First Name\]/g, firstName)
+            .replace(/\[Last Name\]/g, lastName)
+            .replace(/\[Email\]/g, email)
+            .replace(/\[Company\]/g, company)
+            .replace(/\[Phone\]/g, phone)
+            .replace(/\[Tags\]/g, tags);
+
+        console.log('Personalized content:', personalized.substring(0, 200) + '...');
+
+        return personalized;
     }
 
     private addTrackingToContent(content: string, campaignId?: string): string {

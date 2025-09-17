@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { VariableHelper } from '@/components/ui/variable-helper';
 import { toast } from '@/hooks/use-toast';
 import { X, Save, Eye } from 'lucide-react';
 
@@ -133,19 +134,14 @@ export function TemplateBuilder({ onSave, onClose }: TemplateBuilderProps) {
                                 />
                             </div>
 
-                            <div>
-                                <Label htmlFor="template-content">Email Content</Label>
-                                <Textarea
-                                    id="template-content"
-                                    value={content}
-                                    onChange={(e) => setContent(e.target.value)}
-                                    placeholder="Write your email content here... You can use placeholders like [Recipient Name] for personalization."
-                                    className="mt-1 min-h-[300px]"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Tip: Use [Recipient Name] to personalize emails. Line breaks will be preserved.
-                                </p>
-                            </div>
+                            <VariableHelper
+                                content={content}
+                                onContentChange={setContent}
+                                placeholder="Write your email content here..."
+                                showPreview={true}
+                                showVariableButtons={true}
+                                showAutoComplete={true}
+                            />
 
                             <div className="flex justify-end gap-2 pt-4">
                                 <Button variant="outline" onClick={onClose}>

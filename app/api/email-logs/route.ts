@@ -92,9 +92,8 @@ export async function POST(req: NextRequest) {
         if (providerId) updateData.providerId = providerId;
         if (error) updateData.error = error;
 
-        // If we're updating reply status, also update the main status to REPLIED
+        // If we're updating reply status, set repliedAt timestamp but keep original status
         if (replyStatus && !status) {
-            updateData.status = 'REPLIED';
             updateData.repliedAt = new Date();
         }
 

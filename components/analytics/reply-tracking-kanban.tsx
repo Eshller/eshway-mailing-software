@@ -243,14 +243,6 @@ export function ReplyTrackingKanban() {
 
     useEffect(() => {
         fetchEmails();
-
-        // Set up automatic refresh every 30 seconds
-        const interval = setInterval(() => {
-            fetchEmails();
-        }, 30000);
-
-        // Cleanup interval on unmount
-        return () => clearInterval(interval);
     }, []);
 
     const updateReply = async (emailId: string, replyStatus: string, replyContent: string) => {

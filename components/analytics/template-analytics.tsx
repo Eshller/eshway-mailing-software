@@ -57,14 +57,6 @@ export function TemplateAnalytics() {
 
     useEffect(() => {
         fetchTemplateAnalytics();
-
-        // Set up automatic refresh every 30 seconds
-        const interval = setInterval(() => {
-            fetchTemplateAnalytics();
-        }, 30000);
-
-        // Cleanup interval on unmount
-        return () => clearInterval(interval);
     }, []);
 
     const sortedTemplates = [...templates].sort((a, b) => {

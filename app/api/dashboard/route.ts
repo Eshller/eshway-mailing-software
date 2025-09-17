@@ -64,7 +64,7 @@ export async function GET() {
         });
 
         const totalSent = emailLogs.length;
-        const totalDelivered = emailLogs.filter(log => log.status === 'DELIVERED' || log.status === 'SENT').length;
+        const totalDelivered = emailLogs.filter(log => log.status === 'DELIVERED' || log.status === 'SENT' || log.status === 'REPLIED').length;
         const totalOpened = emailLogs.filter(log => log.openedAt).length;
         const totalClicked = emailLogs.filter(log => log.clickedAt).length;
 

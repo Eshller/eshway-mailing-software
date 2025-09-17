@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
         });
 
         const totalSent = emailLogs.length;
-        const totalDelivered = emailLogs.filter(log => log.status === 'DELIVERED' || log.status === 'SENT').length;
+        const totalDelivered = emailLogs.filter(log => log.status === 'DELIVERED' || log.status === 'SENT' || log.status === 'REPLIED').length;
         const totalOpened = emailLogs.filter(log => log.openedAt).length;
         const totalClicked = emailLogs.filter(log => log.clickedAt).length;
         const totalReplied = emailLogs.filter(log => log.isReplied).length;
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
         const campaignStats = campaignAnalytics.map(campaign => {
             const logs = campaign.emailLogs;
             const sent = logs.length;
-            const delivered = logs.filter(log => log.status === 'DELIVERED' || log.status === 'SENT').length;
+            const delivered = logs.filter(log => log.status === 'DELIVERED' || log.status === 'SENT' || log.status === 'REPLIED').length;
             const opened = logs.filter(log => log.openedAt).length;
             const clicked = logs.filter(log => log.clickedAt).length;
             const replied = logs.filter(log => log.isReplied).length;

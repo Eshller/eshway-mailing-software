@@ -72,14 +72,6 @@ function AnalyticsPageContent() {
 
     useEffect(() => {
         fetchAnalytics();
-
-        // Set up automatic refresh every 30 seconds
-        const interval = setInterval(() => {
-            fetchAnalytics();
-        }, 30000);
-
-        // Cleanup interval on unmount
-        return () => clearInterval(interval);
     }, []);
 
     if (isLoading) {
@@ -103,9 +95,8 @@ function AnalyticsPageContent() {
                         Track performance, monitor deliverability, and optimize your email campaigns
                     </p>
                     {lastUpdated && (
-                        <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            Live data • Last updated: {lastUpdated.toLocaleString()}
+                        <div className="text-sm text-gray-500 mt-1">
+                            Last updated: {lastUpdated.toLocaleString()}
                         </div>
                     )}
                 </div>

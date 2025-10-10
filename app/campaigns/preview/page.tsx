@@ -22,6 +22,8 @@ import { useRouter } from 'next/navigation';
 import { Contact } from '@prisma/client';
 import { Select, SelectItem, SelectValue, SelectContent, SelectTrigger } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { EmailProgressTracker } from '@/components/campaigns/email-progress-tracker';
+import { BatchProgress } from '@/lib/email-service';
 
 // Utility function to convert text content to HTML with proper line breaks
 const formatTextToHtml = (text: string): string => {
@@ -109,6 +111,9 @@ const EmailInterface = () => {
     const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
     const [template, setTemplate] = useState<string | null>(null);
     const [isClient, setIsClient] = useState(false);
+    const [showProgressTracker, setShowProgressTracker] = useState(false);
+    const [emailProgress, setEmailProgress] = useState<BatchProgress | null>(null);
+    const [progressId, setProgressId] = useState<string | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -140,6 +145,32 @@ const EmailInterface = () => {
         fetchContacts();
     }, []);
 
+    // Poll progress when sending emails
+    useEffect(() => {
+        if (!progressId || !showProgressTracker) return;
+
+        const pollProgress = async () => {
+            try {
+                const response = await fetch(`/api/send-bulk-email?progressId=${progressId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setEmailProgress(data.progress);
+
+                    // Don't auto-close when complete, let user close manually
+                    // if (data.progress.isComplete) {
+                    //     setShowProgressTracker(false);
+                    //     setProgressId(null);
+                    // }
+                }
+            } catch (error) {
+                console.error('Error polling progress:', error);
+            }
+        };
+
+        const interval = setInterval(pollProgress, 1000); // Poll every second
+        return () => clearInterval(interval);
+    }, [progressId, showProgressTracker]);
+
     // Show loading state while client-side hydration is happening
     if (!isClient) {
         return <div className="flex justify-center items-center h-screen">
@@ -162,32 +193,47 @@ const EmailInterface = () => {
     }
 
     const handleSendEmail = async () => {
-        setIsLoading(true);
-        console.log('contacts', contacts);
-        console.log('emailTemplate', emailTemplate);
+        if (selectedContacts.length === 0) {
+            toast({
+                title: "No Recipients Selected",
+                description: "Please select at least one contact to send emails to.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        // Generate progress ID
+        const newProgressId = `bulk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        setProgressId(newProgressId);
+        setShowProgressTracker(true);
+        setEmailProgress({
+            totalEmails: selectedContacts.length,
+            processedEmails: 0,
+            currentBatch: 0,
+            totalBatches: 0,
+            successCount: 0,
+            errorCount: 0,
+            isComplete: false
+        });
+
+        console.log("Sending email to:", selectedContacts.map(contact => contact.email));
+
         try {
-            // const emails = selectedContacts.map(contact => {
-            //     const personalizedContent = emailTemplate.content.replace('[Recipient Name]', contact.name);
-            //     return {
-            //         recipient: contact.email,
-            //         subject: emailTemplate.subject,
-            //         content: personalizedContent
-            //     }
-            // })
-            console.log("Sending email to:", selectedContacts.map(contact => contact.email));
-            const response = await fetch('/api/send-email', {
+            const response = await fetch('/api/send-bulk-email', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     recipients: selectedContacts.map(contact => contact.email),
-                    name: selectedContacts.map(contact => contact.name),
+                    names: selectedContacts.map(contact => contact.name),
                     subject: emailTemplate.subject,
                     content: emailTemplate.content,
-                    campaignId: emailTemplate.campaignId
+                    campaignId: emailTemplate.campaignId,
+                    progressId: newProgressId
                 })
             });
+
             if (!response.ok) {
                 const errorData = await response.json();
 
@@ -199,6 +245,8 @@ const EmailInterface = () => {
                         description: errorData.message || "Please configure an email service to send emails.",
                         variant: "destructive",
                     });
+                    setShowProgressTracker(false);
+                    setProgressId(null);
                     return;
                 } else if (response.status === 501) {
                     // Email service not implemented
@@ -207,6 +255,8 @@ const EmailInterface = () => {
                         description: "Email service is configured but not yet implemented. Please contact support.",
                         variant: "destructive",
                     });
+                    setShowProgressTracker(false);
+                    setProgressId(null);
                     return;
                 } else {
                     // Other errors
@@ -229,10 +279,17 @@ const EmailInterface = () => {
                 }
 
                 toast({
-                    title: "Email sent",
+                    title: "Email Campaign Complete",
                     description: message,
                     variant: "default",
                 });
+
+                // Show option to view report
+                setTimeout(() => {
+                    if (confirm('Campaign sent successfully! Would you like to view the detailed report?')) {
+                        router.push(`/campaigns/${emailTemplate.campaignId}/report`);
+                    }
+                }, 1000);
             } else {
                 toast({
                     title: "Email Not Sent",
@@ -246,14 +303,25 @@ const EmailInterface = () => {
                 description: error?.message || "Please try again.",
                 variant: "destructive",
             });
+            setShowProgressTracker(false);
+            setProgressId(null);
         }
-        setIsLoading(false);
-        // router.push('/');
     }
 
     const handleSelectContacts = (value: string) => {
-        const selectedContacts = contacts.filter((contact) => contact.tags?.includes(value));
-        setSelectedContacts(selectedContacts);
+        if (value === 'all-valid') {
+            // Select all contacts with valid emails
+            const validContacts = contacts.filter(contact =>
+                contact.email && contact.emailValidated
+            );
+            setSelectedContacts(validContacts);
+        } else {
+            // Select contacts by tag (only those with valid emails)
+            const selectedContacts = contacts.filter((contact) =>
+                contact.tags?.includes(value) && contact.email && contact.emailValidated
+            );
+            setSelectedContacts(selectedContacts);
+        }
     }
 
     return (
@@ -343,15 +411,47 @@ const EmailInterface = () => {
                             </Button>
                         </div> */}
                         <div className="max-w-5xl mx-auto">
+                            {/* Email Delivery Status */}
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                <h3 className="font-medium text-blue-900 mb-2">Email Delivery Status</h3>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span className="text-green-600 font-medium">
+                                            {contacts.filter(c => c.email && c.emailValidated).length}
+                                        </span>
+                                        <span className="text-gray-600"> valid emails</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-red-600 font-medium">
+                                            {contacts.filter(c => !c.email || !c.emailValidated).length}
+                                        </span>
+                                        <span className="text-gray-600"> invalid/missing emails</span>
+                                    </div>
+                                </div>
+                                {contacts.filter(c => !c.email || !c.emailValidated).length > 0 && (
+                                    <div className="mt-2 text-sm text-amber-700">
+                                        ⚠️ {contacts.filter(c => !c.email || !c.emailValidated).length} contacts will be excluded from this campaign
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="mb-4">
                                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                                    Select Recipients by Tag
+                                    Select Recipients
                                 </label>
                                 <Select onValueChange={(value: any) => handleSelectContacts(value)}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Choose a tag to select contacts" />
+                                        <SelectValue placeholder="Choose recipients" />
                                     </SelectTrigger>
                                     <SelectContent>
+                                        <SelectItem value="all-valid">
+                                            <div className="flex justify-between items-center w-full">
+                                                <span>All Valid Contacts</span>
+                                                <span className="text-xs text-gray-500 ml-2">
+                                                    ({contacts.filter(c => c.email && c.emailValidated).length} contacts)
+                                                </span>
+                                            </div>
+                                        </SelectItem>
                                         {contacts.reduce((uniqueTags: string[], contact) => {
                                             const contactTags = contact.tags as string;
                                             contactTags?.split(',').forEach((tag: string) => {
@@ -363,14 +463,14 @@ const EmailInterface = () => {
                                             return uniqueTags;
                                         }, []).map((tag: string) => {
                                             const tagContacts = contacts.filter(contact =>
-                                                contact.tags?.includes(tag)
+                                                contact.tags?.includes(tag) && contact.email && contact.emailValidated
                                             );
                                             return (
                                                 <SelectItem key={tag} value={tag}>
                                                     <div className="flex justify-between items-center w-full">
                                                         <span>{tag}</span>
                                                         <span className="text-xs text-gray-500 ml-2">
-                                                            ({tagContacts.length} contact{tagContacts.length !== 1 ? 's' : ''})
+                                                            ({tagContacts.length} valid contact{tagContacts.length !== 1 ? 's' : ''})
                                                         </span>
                                                     </div>
                                                 </SelectItem>
@@ -401,7 +501,13 @@ const EmailInterface = () => {
                         )}
                     </div>
                     <div className="flex justify-center mt-4">
-                        <Button className="gap-2 bg-[#d86dfc] hover:bg-[#d86dfc]/80 text-white" onClick={handleSendEmail} disabled={isLoading || selectedContacts.length === 0}>{isLoading ? 'Sending...' : selectedContacts.length === 0 ? 'Select Recipients ^' : 'SEND'}</Button>
+                        <Button
+                            className="gap-2 bg-[#d86dfc] hover:bg-[#d86dfc]/80 text-white"
+                            onClick={handleSendEmail}
+                            disabled={isLoading || selectedContacts.length === 0 || showProgressTracker}
+                        >
+                            {showProgressTracker ? 'Sending...' : isLoading ? 'Sending...' : selectedContacts.length === 0 ? 'Select Recipients ^' : 'SEND'}
+                        </Button>
                     </div>
                 </>
             ) : (
@@ -409,6 +515,16 @@ const EmailInterface = () => {
                     <p className="text-gray-500">No email template selected</p>
                 </div>
             )}
+
+            {/* Progress Tracker Modal */}
+            <EmailProgressTracker
+                isVisible={showProgressTracker}
+                onClose={() => {
+                    setShowProgressTracker(false);
+                    setProgressId(null);
+                }}
+                progress={emailProgress || undefined}
+            />
         </div>
     );
 };

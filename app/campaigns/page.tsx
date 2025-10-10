@@ -445,6 +445,30 @@ function CampaignsPageContent() {
                 <Card className="p-6">
                   <h2 className="text-xl font-semibold mb-4">Campaign Settings</h2>
                   <div className="space-y-4">
+                    {/* Email Statistics */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h3 className="font-medium text-blue-900 mb-2">Email Delivery Status</h3>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-green-600 font-medium">
+                            {contacts.filter(c => c.email && c.emailValidated).length}
+                          </span>
+                          <span className="text-gray-600"> valid emails</span>
+                        </div>
+                        <div>
+                          <span className="text-red-600 font-medium">
+                            {contacts.filter(c => !c.email || !c.emailValidated).length}
+                          </span>
+                          <span className="text-gray-600"> invalid/missing emails</span>
+                        </div>
+                      </div>
+                      {contacts.filter(c => !c.email || !c.emailValidated).length > 0 && (
+                        <div className="mt-2 text-sm text-amber-700">
+                          ⚠️ {contacts.filter(c => !c.email || !c.emailValidated).length} contacts will be excluded from this campaign
+                        </div>
+                      )}
+                    </div>
+
                     <div>
                       <Label>Send To</Label>
                       <Select defaultValue="all">
@@ -452,7 +476,9 @@ function CampaignsPageContent() {
                           <SelectValue placeholder="Select recipients" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All Contacts</SelectItem>
+                          <SelectItem value="all">
+                            All Valid Contacts ({contacts.filter(c => c.email && c.emailValidated).length})
+                          </SelectItem>
                           {contacts.reduce((uniqueTags: string[], contact) => {
                             const contactTags = contact.tags as string;
                             contactTags?.split(',').forEach((tag: string) => {
@@ -462,11 +488,16 @@ function CampaignsPageContent() {
                               }
                             });
                             return uniqueTags;
-                          }, []).map((tag: string) => (
-                            <SelectItem key={tag} value={tag}>
-                              {tag}
-                            </SelectItem>
-                          ))}
+                          }, []).map((tag: string) => {
+                            const validContactsInTag = contacts.filter(c =>
+                              c.tags?.includes(tag) && c.email && c.emailValidated
+                            ).length;
+                            return (
+                              <SelectItem key={tag} value={tag}>
+                                {tag} ({validContactsInTag} valid emails)
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>

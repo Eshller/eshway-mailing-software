@@ -139,10 +139,10 @@ export function KPIDashboard({ data }: KPIDashboardProps) {
         },
         {
             title: "Delivery Rate",
-            value: Math.round(data.deliveredRate || 0),
+            value: Math.round(data.deliveryRate || 0),
             description: `Delivered: ${(data.totalDelivered || 0).toLocaleString()} of ${(data.totalSent || 0).toLocaleString()}`,
             icon: <CheckCircle className="h-4 w-4" />,
-            status: (data.deliveredRate || 0) >= 95 ? 'good' : (data.deliveredRate || 0) >= 90 ? 'warning' : 'danger',
+            status: (data.deliveryRate || 0) >= 95 ? 'good' as const : (data.deliveryRate || 0) >= 90 ? 'warning' as const : 'danger' as const,
             format: 'percentage' as const
         },
         {
@@ -150,7 +150,7 @@ export function KPIDashboard({ data }: KPIDashboardProps) {
             value: Math.round(data.openRate || 0),
             description: `Opened: ${(data.totalOpened || 0).toLocaleString()} emails`,
             icon: <Eye className="h-4 w-4" />,
-            status: (data.openRate || 0) >= 20 ? 'good' : (data.openRate || 0) >= 15 ? 'warning' : 'danger',
+            status: (data.openRate || 0) >= 20 ? 'good' as const : (data.openRate || 0) >= 15 ? 'warning' as const : 'danger' as const,
             format: 'percentage' as const
         },
         {
@@ -158,7 +158,7 @@ export function KPIDashboard({ data }: KPIDashboardProps) {
             value: Math.round(data.clickRate || 0),
             description: `Clicked: ${(data.totalClicked || 0).toLocaleString()} emails`,
             icon: <MousePointer className="h-4 w-4" />,
-            status: (data.clickRate || 0) >= 3 ? 'good' : (data.clickRate || 0) >= 2 ? 'warning' : 'danger',
+            status: (data.clickRate || 0) >= 3 ? 'good' as const : (data.clickRate || 0) >= 2 ? 'warning' as const : 'danger' as const,
             format: 'percentage' as const
         },
         {
@@ -166,7 +166,7 @@ export function KPIDashboard({ data }: KPIDashboardProps) {
             value: Math.round(data.replyRate || 0),
             description: `Replied: ${(data.totalReplied || 0).toLocaleString()} emails`,
             icon: <MessageSquare className="h-4 w-4" />,
-            status: (data.replyRate || 0) >= 5 ? 'good' : (data.replyRate || 0) >= 3 ? 'warning' : 'danger',
+            status: (data.replyRate || 0) >= 5 ? 'good' as const : (data.replyRate || 0) >= 3 ? 'warning' as const : 'danger' as const,
             format: 'percentage' as const
         },
         {
@@ -174,7 +174,7 @@ export function KPIDashboard({ data }: KPIDashboardProps) {
             value: Math.round(data.bounceRate || 0),
             description: `Bounced: ${(data.totalBounced || 0).toLocaleString()} emails`,
             icon: <AlertCircle className="h-4 w-4" />,
-            status: (data.bounceRate || 0) <= 2 ? 'good' : (data.bounceRate || 0) <= 5 ? 'warning' : 'danger',
+            status: (data.bounceRate || 0) <= 2 ? 'good' as const : (data.bounceRate || 0) <= 5 ? 'warning' as const : 'danger' as const,
             format: 'percentage' as const
         }
     ];

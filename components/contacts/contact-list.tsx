@@ -11,11 +11,13 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Edit2, Trash2, Loader2, Check, X, Phone, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Edit2, Trash2, Loader2, Check, X, Phone, ChevronLeft, ChevronRight, Eye, History, Mail, Filter, SortAsc, SortDesc } from "lucide-react";
 
 import { Contact } from "@prisma/client";
 import { toast } from "@/hooks/use-toast";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../ui/select";
+import { ContactEmailTracking } from "./contact-email-tracking";
+import { ConfirmationDialog } from "../ui/confirmation-dialog";
 
 export default function ContactList() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -23,7 +25,31 @@ export default function ContactList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [selectAll, setSelectAll] = useState(false);
+
+  // Filter and sort states
+  const [sortBy, setSortBy] = useState<'name' | 'email' | 'createdAt' | 'updatedAt'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [emailStatusFilter, setEmailStatusFilter] = useState<'all' | 'valid' | 'invalid' | 'none'>('all');
+  const [tagFilter, setTagFilter] = useState<string>('');
+  const [showFilters, setShowFilters] = useState(false);
   const [editingContactId, setEditingContactId] = useState<string | null>(null);
+  const [trackingContactId, setTrackingContactId] = useState<string | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    contactId: string | null;
+    contactName: string;
+  }>({
+    isOpen: false,
+    contactId: null,
+    contactName: "",
+  });
+  const [bulkDeleteConfirmation, setBulkDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    count: number;
+  }>({
+    isOpen: false,
+    count: 0,
+  });
   const [editFields, setEditFields] = useState<{ [key: string]: string | string[] }>({
     name: "",
     email: "",
@@ -39,7 +65,18 @@ export default function ContactList() {
     const fetchContacts = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch("/api/contacts");
+        // Build query parameters
+        const params = new URLSearchParams();
+        params.append('sortBy', sortBy);
+        params.append('sortOrder', sortOrder);
+        if (emailStatusFilter !== 'all') {
+          params.append('emailStatus', emailStatusFilter);
+        }
+        if (tagFilter) {
+          params.append('tags', tagFilter);
+        }
+
+        const response = await fetch(`/api/contacts?${params.toString()}`);
         const data = await response.json();
         setContacts(data);
       } catch (error: any) {
@@ -54,9 +91,17 @@ export default function ContactList() {
       }
     };
     fetchContacts();
-  }, []);
+  }, [sortBy, sortOrder, emailStatusFilter, tagFilter]);
 
-  const handleDeleteSelected = async () => {
+  const handleDeleteSelected = () => {
+    if (selectedContacts.length === 0) return;
+    setBulkDeleteConfirmation({
+      isOpen: true,
+      count: selectedContacts.length,
+    });
+  };
+
+  const confirmBulkDelete = async (dontAskAgain?: boolean) => {
     const prevContacts = [...contacts];
     const filteredContacts = prevContacts.filter(
       (contact) => !selectedContacts.includes(contact.id)
@@ -85,6 +130,7 @@ export default function ContactList() {
     } finally {
       setIsLoading(false);
     }
+    setBulkDeleteConfirmation({ isOpen: false, count: 0 });
   };
 
   const handleSelectAll = () => {
@@ -110,7 +156,7 @@ export default function ContactList() {
     setEditingContactId(contact.id);
     setEditFields({
       name: contact.name,
-      email: contact.email,
+      email: contact.email || "",
       phone: contact.phone || "",
       company: contact.company || "",
       tags: contact.tags?.split(",") || [],
@@ -158,15 +204,27 @@ export default function ContactList() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
+    const contact = contacts.find(c => c.id === id);
+    if (!contact) return;
+
+    setDeleteConfirmation({
+      isOpen: true,
+      contactId: id,
+      contactName: contact.name,
+    });
+  };
+
+  const confirmDelete = async (dontAskAgain?: boolean) => {
+    if (!deleteConfirmation.contactId) return;
 
     const prevContacts = [...contacts];
-    const filteredContacts = prevContacts.filter((contact) => contact.id !== id);
+    const filteredContacts = prevContacts.filter((contact) => contact.id !== deleteConfirmation.contactId);
     setContacts(filteredContacts);
-    console.log("Delete contact with ID:", id);
+    console.log("Delete contact with ID:", deleteConfirmation.contactId);
 
     try {
-      const response = await fetch(`/api/contacts/${id}`, {
+      const response = await fetch(`/api/contacts/${deleteConfirmation.contactId}`, {
         method: "DELETE",
       });
       if (response.ok) {
@@ -182,6 +240,7 @@ export default function ContactList() {
         variant: "destructive",
       });
     }
+    setDeleteConfirmation({ isOpen: false, contactId: null, contactName: "" });
   };
 
   const filteredContacts = contacts.filter((contact) =>
@@ -192,6 +251,13 @@ export default function ContactList() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  // Get unique tags for filter dropdown
+  const uniqueTags = Array.from(new Set(
+    contacts.flatMap(contact =>
+      contact.tags?.split(',').map(tag => tag.trim()).filter(tag => tag) || []
+    )
+  ));
 
   return (
     <div className="space-y-4">
@@ -206,16 +272,121 @@ export default function ContactList() {
               className="pl-8"
             />
           </div>
-          <Button
-            variant="destructive"
-            onClick={handleDeleteSelected}
-            disabled={selectedContacts.length === 0}
-            className="my-4 justify-end"
-          >
-            Delete Selected
-          </Button>
+          <div className="flex gap-2 my-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className="gap-2"
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteSelected}
+              disabled={selectedContacts.length === 0}
+            >
+              Delete Selected
+            </Button>
+          </div>
         </div>
       </div>
+
+      {/* Filter Controls */}
+      {showFilters && (
+        <div className="bg-gray-50 p-4 rounded-lg border">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Sort By */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Sort By</label>
+              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="createdAt">Date Created</SelectItem>
+                  <SelectItem value="updatedAt">Date Updated</SelectItem>
+                  <SelectItem value="name">Name</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Sort Order */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Order</label>
+              <div className="flex gap-2">
+                <Button
+                  variant={sortOrder === 'desc' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSortOrder('desc')}
+                  className="gap-1"
+                >
+                  <SortDesc className="h-3 w-3" />
+                  Newest
+                </Button>
+                <Button
+                  variant={sortOrder === 'asc' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSortOrder('asc')}
+                  className="gap-1"
+                >
+                  <SortAsc className="h-3 w-3" />
+                  Oldest
+                </Button>
+              </div>
+            </div>
+
+            {/* Email Status Filter */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Email Status</label>
+              <Select value={emailStatusFilter} onValueChange={(value: any) => setEmailStatusFilter(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Contacts</SelectItem>
+                  <SelectItem value="valid">Valid Emails</SelectItem>
+                  <SelectItem value="invalid">Invalid Emails</SelectItem>
+                  <SelectItem value="none">No Email</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Tag Filter */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Filter by Tag</label>
+              <Select value={tagFilter || "all"} onValueChange={(value) => setTagFilter(value === "all" ? "" : value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All tags" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Tags</SelectItem>
+                  {uniqueTags.map(tag => (
+                    <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Clear Filters */}
+          <div className="mt-4 flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSortBy('createdAt');
+                setSortOrder('desc');
+                setEmailStatusFilter('all');
+                setTagFilter('');
+              }}
+            >
+              Clear Filters
+            </Button>
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center items-center h-screen">
@@ -242,6 +413,7 @@ export default function ContactList() {
                 <TableHead>Phone</TableHead>
                 <TableHead>Company</TableHead>
                 <TableHead>Tags</TableHead>
+                <TableHead>Email Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -275,9 +447,25 @@ export default function ContactList() {
                       <Input
                         value={editFields.email}
                         onChange={(e) => setEditFields({ ...editFields, email: e.target.value })}
+                        placeholder="Enter email (optional)"
                       />
                     ) : (
-                      contact.email
+                      <div className="flex items-center gap-2">
+                        {contact.email ? (
+                          <>
+                            <span className={contact.emailValidated ? "text-green-600" : "text-red-600"}>
+                              {contact.email}
+                            </span>
+                            {contact.emailValidated ? (
+                              <span className="text-green-500 text-xs">✓</span>
+                            ) : (
+                              <span className="text-red-500 text-xs" title="Invalid email format">⚠</span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-gray-400 italic">No email</span>
+                        )}
+                      </div>
                     )}
                   </TableCell>
                   <TableCell>
@@ -343,6 +531,27 @@ export default function ContactList() {
                       ))}
                     </div> */}
                   </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {contact.email ? (
+                        <>
+                          <span className={`text-xs px-2 py-1 rounded-full ${contact.emailValidated
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                            }`}>
+                            {contact.emailValidated ? 'Valid' : 'Invalid'}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {contact.emailValidated ? '✓' : '⚠'}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                          No Email
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       {editingContactId === contact.id ? (
@@ -356,6 +565,16 @@ export default function ContactList() {
                         </>
                       ) : (
                         <>
+                          {contact.email && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setTrackingContactId(contact.id)}
+                              title="View email tracking"
+                            >
+                              <History className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="sm" onClick={() => handleEdit(contact)}>
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -404,6 +623,67 @@ export default function ContactList() {
           </div>
         </div>
       )}
+
+      {/* Email Tracking Modal */}
+      {trackingContactId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Email Tracking</h2>
+                <Button
+                  variant="ghost"
+                  onClick={() => setTrackingContactId(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="h-6 w-6" />
+                </Button>
+              </div>
+
+              {(() => {
+                const contact = contacts.find(c => c.id === trackingContactId);
+                if (!contact) return null;
+
+                return (
+                  <ContactEmailTracking
+                    contactId={contact.id}
+                    contactName={contact.name}
+                    contactEmail={contact.email || undefined}
+                  />
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Single Contact Delete Confirmation */}
+      <ConfirmationDialog
+        isOpen={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation({ isOpen: false, contactId: null, contactName: "" })}
+        onConfirm={confirmDelete}
+        title="Delete Contact"
+        description={`Are you sure you want to delete "${deleteConfirmation.contactName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+        showDontAskAgain={true}
+        dontAskAgainKey="contactDeleteConfirmation"
+      />
+
+      {/* Bulk Delete Confirmation */}
+      <ConfirmationDialog
+        isOpen={bulkDeleteConfirmation.isOpen}
+        onClose={() => setBulkDeleteConfirmation({ isOpen: false, count: 0 })}
+        onConfirm={confirmBulkDelete}
+        title="Delete Selected Contacts"
+        description={`Are you sure you want to delete ${bulkDeleteConfirmation.count} selected contact${bulkDeleteConfirmation.count > 1 ? 's' : ''}? This action cannot be undone.`}
+        confirmText="Delete All"
+        cancelText="Cancel"
+        variant="destructive"
+        showDontAskAgain={true}
+        dontAskAgainKey="bulkContactDeleteConfirmation"
+      />
     </div>
   );
 }

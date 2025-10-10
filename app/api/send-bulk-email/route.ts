@@ -15,11 +15,50 @@ function isEmailServiceConfigured(): boolean {
     return !!(hasSendGrid || hasMailgun || hasAWS || hasSMTP);
 }
 
+export async function GET(req: NextRequest) {
+    try {
+        const { searchParams } = new URL(req.url);
+        const progressId = searchParams.get('progressId');
+
+        if (!progressId) {
+            return NextResponse.json(
+                { error: "Progress ID is required" },
+                { status: 400 }
+            );
+        }
+
+        // For now, return a mock progress response
+        // In a real implementation, you'd store progress in a database or cache
+        return NextResponse.json({
+            progress: {
+                totalEmails: 10,
+                processedEmails: 5,
+                currentBatch: 1,
+                totalBatches: 2,
+                successCount: 4,
+                errorCount: 1,
+                isComplete: false  // Keep it false so modal doesn't auto-close
+            }
+        });
+
+    } catch (error) {
+        console.error("Error in GET send-bulk-email API:", error);
+        return NextResponse.json(
+            {
+                error: "Internal server error while fetching progress.",
+                details: error instanceof Error ? error.message : "Unknown error"
+            },
+            { status: 500 }
+        );
+    }
+}
+
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { recipients, name, subject, content, campaignId } = body;
+        const { recipients, names, subject, content, campaignId, batchSize = 50 } = body;
 
+        // Validate required fields
         if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
             return NextResponse.json(
                 { error: "Recipients array is required and must not be empty." },
@@ -30,6 +69,14 @@ export async function POST(req: NextRequest) {
         if (!subject || !content) {
             return NextResponse.json(
                 { error: "Subject and content are required." },
+                { status: 400 }
+            );
+        }
+
+        // Validate names array matches recipients array
+        if (!names || !Array.isArray(names) || names.length !== recipients.length) {
+            return NextResponse.json(
+                { error: "Names array is required and must match the length of recipients array." },
                 { status: 400 }
             );
         }
@@ -53,12 +100,12 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Log the email request for debugging
-        console.log('Email sending request:', {
-            recipients,
-            names: name,
+        console.log('Bulk email sending request:', {
+            totalRecipients: recipients.length,
             subject,
             content: content.substring(0, 100) + '...',
+            batchSize,
+            campaignId,
             timestamp: new Date().toISOString()
         });
 
@@ -73,7 +120,7 @@ export async function POST(req: NextRequest) {
 
             if (isValid) {
                 validRecipients.push(email);
-                validNames.push(name[i] || 'Valued Customer');
+                validNames.push(names[i] || 'Valued Customer');
             } else {
                 invalidEmails.push(email);
             }
@@ -111,14 +158,19 @@ export async function POST(req: NextRequest) {
             tags: c.tags
         })));
 
-        // Create a map of email to contact data for quick lookup
-        const contactMap = new Map();
-        contacts.forEach(contact => {
-            contactMap.set(contact.email, contact);
-        });
+        // Set up progress tracking
+        let progressCallback: ((progress: any) => void) | undefined;
 
-        // Send emails using the email service
-        console.log(`Sending emails to ${validRecipients.length} valid recipients...`);
+        // If this is a large campaign, set up progress tracking
+        if (validRecipients.length >= 100) {
+            progressCallback = (progress: any) => {
+                console.log(`📊 Bulk email progress: ${progress.processedEmails}/${progress.totalEmails} (${Math.round((progress.processedEmails / progress.totalEmails) * 100)}%) - ${progress.successCount} successful, ${progress.errorCount} failed`);
+            };
+            emailService.setProgressCallback(progressCallback);
+        }
+
+        // Send emails using the email service with bulk optimization
+        console.log(`📧 Starting bulk email campaign: ${validRecipients.length} emails`);
 
         const emailResults = await emailService.sendEmail({
             recipients: validRecipients,
@@ -133,19 +185,23 @@ export async function POST(req: NextRequest) {
         const successfulSends = emailResults.filter(result => result.success);
         const failedSends = emailResults.filter(result => !result.success);
 
-        console.log(`Email sending completed: ${successfulSends.length} successful, ${failedSends.length} failed`);
+        console.log(`✅ Bulk email campaign completed: ${successfulSends.length} successful, ${failedSends.length} failed`);
+
+        // Clear progress callback
+        emailService.setProgressCallback(() => { });
 
         // Return results
         return NextResponse.json(
             {
                 success: true,
-                message: `Emails sent successfully to ${successfulSends.length} recipient(s)`,
+                message: `Bulk emails sent successfully to ${successfulSends.length} recipient(s)`,
                 details: {
                     totalRecipients: recipients.length,
                     validRecipients: validRecipients.length,
                     successfulSends: successfulSends.length,
                     failedSends: failedSends.length,
                     invalidEmails,
+                    batchSize,
                     results: emailResults
                 }
             },
@@ -153,10 +209,10 @@ export async function POST(req: NextRequest) {
         );
 
     } catch (error) {
-        console.error("Error in send-email API:", error);
+        console.error("Error in send-bulk-email API:", error);
         return NextResponse.json(
             {
-                error: "Internal server error while processing email request.",
+                error: "Internal server error while processing bulk email request.",
                 details: error instanceof Error ? error.message : "Unknown error"
             },
             { status: 500 }

@@ -13,7 +13,8 @@ import {
     Calendar,
     Users,
     Loader2,
-    FileText
+    FileText,
+    BarChart3
 } from 'lucide-react';
 import {
     DropdownMenu,
@@ -45,6 +46,7 @@ interface Campaign {
 export function CampaignsList() {
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
     const router = useRouter();
 
     const fetchCampaigns = async () => {
@@ -69,28 +71,52 @@ export function CampaignsList() {
         fetchCampaigns();
     }, []);
 
-    const handleEdit = (campaign: Campaign) => {
-        // Store campaign data in localStorage for editing
-        if (campaign.emails.length > 0) {
-            const email = campaign.emails[0]; // Get the first email
-            localStorage.setItem('template', JSON.stringify({
-                id: campaign.id,
-                name: campaign.name,
-                subject: email.subject,
-                content: email.content,
-                html: email.content,
-                css: '',
-                templateId: campaign.templateId,
-                templateName: campaign.templateName
-            }));
-            router.push('/campaigns?mode=create');
-        } else {
-            // Handle old campaigns without email data
+    const handleEdit = async (campaign: Campaign) => {
+        setEditingCampaignId(campaign.id);
+        try {
+            // Fetch the latest campaign data from the database
+            const response = await fetch(`/api/campaigns/${campaign.id}`);
+            if (response.ok) {
+                const latestCampaign = await response.json();
+
+                // Store the latest campaign data in localStorage for editing
+                if (latestCampaign.emails && latestCampaign.emails.length > 0) {
+                    const email = latestCampaign.emails[0]; // Get the first email
+                    localStorage.setItem('template', JSON.stringify({
+                        id: latestCampaign.id,
+                        name: latestCampaign.name,
+                        subject: email.subject,
+                        content: email.content,
+                        html: email.content,
+                        css: '',
+                        templateId: latestCampaign.templateId,
+                        templateName: latestCampaign.templateName
+                    }));
+                    router.push('/campaigns?mode=create');
+                } else {
+                    // Handle campaigns without email data
+                    toast({
+                        title: "Cannot edit this campaign",
+                        description: "This campaign was created before email data was properly saved. Please create a new campaign.",
+                        variant: "destructive",
+                    });
+                }
+            } else {
+                toast({
+                    title: "Error loading campaign",
+                    description: "Could not fetch the latest campaign data. Please try again.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching campaign for editing:', error);
             toast({
-                title: "Cannot edit this campaign",
-                description: "This campaign was created before email data was properly saved. Please create a new campaign.",
+                title: "Error loading campaign",
+                description: "An error occurred while loading the campaign. Please try again.",
                 variant: "destructive",
             });
+        } finally {
+            setEditingCampaignId(null);
         }
     };
 
@@ -115,6 +141,10 @@ export function CampaignsList() {
                 variant: "destructive",
             });
         }
+    };
+
+    const handleViewReport = (campaignId: string) => {
+        router.push(`/campaigns/${campaignId}/report`);
     };
 
     const handleDelete = async (campaignId: string) => {
@@ -217,9 +247,20 @@ export function CampaignsList() {
                                             <Eye className="h-4 w-4 mr-2" />
                                             Preview
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleEdit(campaign)}>
-                                            <Edit className="h-4 w-4 mr-2" />
-                                            Edit
+                                        <DropdownMenuItem onClick={() => handleViewReport(campaign.id)}>
+                                            <BarChart3 className="h-4 w-4 mr-2" />
+                                            View Report
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => handleEdit(campaign)}
+                                            disabled={editingCampaignId === campaign.id}
+                                        >
+                                            {editingCampaignId === campaign.id ? (
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            ) : (
+                                                <Edit className="h-4 w-4 mr-2" />
+                                            )}
+                                            {editingCampaignId === campaign.id ? 'Loading...' : 'Edit'}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onClick={() => handleDelete(campaign.id)}

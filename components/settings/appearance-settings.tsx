@@ -145,8 +145,8 @@ export function AppearanceSettings({ onChanges }: AppearanceSettingsProps) {
                                         key={scheme.value}
                                         onClick={() => handleChange('colorScheme', scheme.value)}
                                         className={`p-3 rounded-lg border-2 transition-all ${appearance.colorScheme === scheme.value
-                                                ? 'border-primary ring-2 ring-primary/20'
-                                                : 'border-border hover:border-primary/50'
+                                            ? 'border-primary ring-2 ring-primary/20'
+                                            : 'border-border hover:border-primary/50'
                                             }`}
                                     >
                                         <div className="flex items-center gap-2">
@@ -420,7 +420,7 @@ export function AppearanceSettings({ onChanges }: AppearanceSettingsProps) {
                                 <SelectItem value="US">US (1,234.56)</SelectItem>
                                 <SelectItem value="EU">EU (1.234,56)</SelectItem>
                                 <SelectItem value="IN">India (1,23,456.78)</SelectItem>
-                                <SelectItem value="CH">Switzerland (1'234.56)</SelectItem>
+                                <SelectItem value="CH">Switzerland (1&apos;234.56)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

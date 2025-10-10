@@ -3,6 +3,52 @@ import prisma from '@/lib/prisma';
 
 export const dynamic = "force-dynamic";
 
+export async function GET(
+    req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id: campaignId } = await params;
+
+        if (!campaignId) {
+            return NextResponse.json(
+                { error: "Campaign ID is required." },
+                { status: 400 }
+            );
+        }
+
+        const campaign = await prisma.campaign.findUnique({
+            where: { id: campaignId },
+            include: {
+                emails: true,
+                emailLogs: {
+                    select: {
+                        id: true,
+                        status: true,
+                        recipient: true,
+                        sentAt: true
+                    }
+                }
+            }
+        });
+
+        if (!campaign) {
+            return NextResponse.json(
+                { error: "Campaign not found." },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json(campaign);
+    } catch (error) {
+        console.error("Error fetching campaign:", error);
+        return NextResponse.json(
+            { error: "Internal server error while fetching campaign." },
+            { status: 500 }
+        );
+    }
+}
+
 export async function PUT(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -38,17 +84,47 @@ export async function PUT(
             );
         }
 
-        // Update the campaign
+        // Update the campaign and its associated email
+        console.log('Updating campaign:', {
+            campaignId,
+            name,
+            subject,
+            content: content.substring(0, 100) + '...',
+            templateId,
+            templateName
+        });
+
         const updatedCampaign = await prisma.campaign.update({
             where: { id: campaignId },
             data: {
                 name,
                 templateId: templateId || null,
                 templateName: templateName || null,
+                emails: {
+                    updateMany: {
+                        where: {
+                            campaignId: campaignId
+                        },
+                        data: {
+                            subject,
+                            content,
+                        }
+                    }
+                }
             },
             include: {
                 emails: true,
             },
+        });
+
+        console.log('Campaign updated successfully:', {
+            id: updatedCampaign.id,
+            name: updatedCampaign.name,
+            emailCount: updatedCampaign.emails.length,
+            firstEmail: updatedCampaign.emails[0] ? {
+                subject: updatedCampaign.emails[0].subject,
+                contentLength: updatedCampaign.emails[0].content.length
+            } : null
         });
 
         return NextResponse.json(updatedCampaign);
@@ -100,44 +176,6 @@ export async function DELETE(
         console.error("Error deleting campaign:", error);
         return NextResponse.json(
             { error: "Internal server error while deleting campaign." },
-            { status: 500 }
-        );
-    }
-}
-
-export async function GET(
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    try {
-        const { id: campaignId } = await params;
-
-        if (!campaignId) {
-            return NextResponse.json(
-                { error: "Campaign ID is required." },
-                { status: 400 }
-            );
-        }
-
-        const campaign = await prisma.campaign.findUnique({
-            where: { id: campaignId },
-            include: {
-                emails: true,
-            },
-        });
-
-        if (!campaign) {
-            return NextResponse.json(
-                { error: "Campaign not found." },
-                { status: 404 }
-            );
-        }
-
-        return NextResponse.json(campaign);
-    } catch (error) {
-        console.error("Error fetching campaign:", error);
-        return NextResponse.json(
-            { error: "Internal server error while fetching campaign." },
             { status: 500 }
         );
     }

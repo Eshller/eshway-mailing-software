@@ -46,9 +46,10 @@ export function BulkUpload() {
 
   const handleDownloadTemplate = () => {
     const template = [
-      ['name', 'email', 'phone', 'company', 'tags'],  // Header row
+      ['name', 'email (optional)', 'phone', 'company', 'tags'],  // Header row
       ['John Doe', 'johndoe@example.com', '9898989898', 'Company A', 'tag1,tag2'],
-      ['Jane Smith', 'janesmith@example.com', '8712413212', 'Eshway', 'tag3']
+      ['Jane Smith', '', '8712413212', 'Eshway', 'tag3'],
+      ['Bob Wilson', 'bob@example.com', '', 'Company B', 'tag4']
     ];
 
     const csvContent = template
@@ -135,7 +136,7 @@ export function BulkUpload() {
     if (data.length === 0) return false;
 
     // Check headers and required columns
-    const requiredHeaders = ["name", "email"];
+    const requiredHeaders = ["name"];
     const headers = Object.keys(data[0]);
 
     // Ensure headers match expected structure
@@ -154,7 +155,7 @@ export function BulkUpload() {
       <div className="max-w-xl">
         <h3 className="text-lg font-medium mb-2">Bulk Upload Contacts</h3>
         <p className="text-gray-600 mb-4">
-          Upload your contacts using a CSV file. Download our template to ensure your file is formatted correctly.
+          Upload your contacts using a CSV file. Email is optional - contacts without valid emails won&apos;t receive campaigns. Download our template to ensure your file is formatted correctly.
         </p>
         <Button variant="outline" className="mb-6" onClick={handleDownloadTemplate}>
           Download Template

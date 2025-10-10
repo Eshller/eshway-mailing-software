@@ -5,11 +5,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
     try {
-        // Get all templates with their performance data
+        // Get all templates
         const templates = await prisma.emailTemplate.findMany({
-            include: {
-                performance: true
-            },
             orderBy: { createdAt: 'desc' }
         });
 
@@ -75,41 +72,8 @@ export async function GET() {
                 // Calculate best performing day (simplified - would need more complex logic)
                 const bestPerformingDay = 'Monday'; // This would be calculated based on actual data
 
-                // Update or create performance record
-                if (template.performance) {
-                    await prisma.templatePerformance.update({
-                        where: { id: template.performance.id },
-                        data: {
-                            totalSent,
-                            totalOpened,
-                            totalClicked,
-                            totalReplied,
-                            openRate: Number(openRate.toFixed(2)),
-                            clickRate: Number(clickRate.toFixed(2)),
-                            replyRate: Number(replyRate.toFixed(2)),
-                            avgResponseTime,
-                            bestPerformingDay,
-                            lastUsedAt
-                        }
-                    });
-                } else {
-                    await prisma.templatePerformance.create({
-                        data: {
-                            templateId: template.id,
-                            templateName: template.name,
-                            totalSent,
-                            totalOpened,
-                            totalClicked,
-                            totalReplied,
-                            openRate: Number(openRate.toFixed(2)),
-                            clickRate: Number(clickRate.toFixed(2)),
-                            replyRate: Number(replyRate.toFixed(2)),
-                            avgResponseTime,
-                            bestPerformingDay,
-                            lastUsedAt
-                        }
-                    });
-                }
+                // Note: Template performance tracking would be implemented here
+                // For now, we'll just return the calculated data
 
                 return {
                     id: template.id,

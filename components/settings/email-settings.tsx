@@ -32,7 +32,7 @@ export interface EmailSettingsRef {
     save: () => Promise<boolean>;
 }
 
-export const EmailSettings = forwardRef<EmailSettingsRef, EmailSettingsProps>(({ onChanges }, ref) => {
+export const EmailSettings = forwardRef<EmailSettingsRef, EmailSettingsProps>(function EmailSettings({ onChanges }, ref) {
     const [emailSettings, setEmailSettings] = useState({
         provider: 'aws-ses',
         smtpHost: '',

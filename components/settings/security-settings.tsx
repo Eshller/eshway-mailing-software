@@ -30,7 +30,7 @@ interface SecuritySettingsProps {
 export function SecuritySettings({ onChanges }: SecuritySettingsProps) {
     const [security, setSecurity] = useState({
         twoFactorEnabled: false,
-        backupCodes: [],
+        backupCodes: [] as string[],
         passwordLastChanged: '2024-01-15',
         loginNotifications: true,
         suspiciousActivityAlerts: true,
@@ -80,7 +80,7 @@ export function SecuritySettings({ onChanges }: SecuritySettingsProps) {
         loadSecurity();
     }, []);
 
-    const handleChange = (field: string, value: string | boolean) => {
+    const handleChange = (field: string, value: string | boolean | string[]) => {
         setSecurity(prev => ({ ...prev, [field]: value }));
         onChanges(true);
     };

@@ -192,7 +192,7 @@ function DashboardContent() {
                   <div key={index} className="flex items-center">
                     <div className="ml-4 space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        Campaign "{campaign.name}" created
+                        Campaign &quot;{campaign.name}&quot; created
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(campaign.createdAt).toLocaleDateString()}
@@ -205,7 +205,7 @@ function DashboardContent() {
                   <div key={index} className="flex items-center">
                     <div className="ml-4 space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        New contact "{contact.name}" added
+                        New contact &quot;{contact.name}&quot; added
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(contact.createdAt).toLocaleDateString()}

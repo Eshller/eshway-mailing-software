@@ -131,7 +131,7 @@ function KanbanColumn({ title, status, emails, onUpdateReply, onMoveToStatus, ic
                                 </div>
                                 {email.replyContent && (
                                     <p className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                                        "{email.replyContent.substring(0, 100)}..."
+                                        &quot;{email.replyContent.substring(0, 100)}...&quot;
                                     </p>
                                 )}
                             </div>

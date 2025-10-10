@@ -3,10 +3,10 @@ import prisma from '@/lib/prisma';
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const emailLogId = params.id;
+        const { id: emailLogId } = await params;
 
         // Update the email log to mark as opened
         await prisma.emailLog.update({

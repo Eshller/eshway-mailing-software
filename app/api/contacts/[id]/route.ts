@@ -51,8 +51,8 @@ export async function PATCH(req: Request) {
         console.log("New data:", { name, email, company, tags, phone });
 
         // Validate the incoming data (if essential fields are missing)
-        if (!name || !email || !tags) {
-            return NextResponse.json({ error: "Missing required fields: name, email, and tags are required" }, { status: 400 });
+        if (!name) {
+            return NextResponse.json({ error: "Missing required field: name is required" }, { status: 400 });
         }
 
         // Ensure tags are formatted properly, split and trim if necessary
@@ -66,12 +66,19 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: "Contact not found" }, { status: 404 });
         }
 
+        // Email validation function
+        const isValidEmail = (email: string): boolean => {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        };
+
         // Proceed to update the contact in the database
         const updatedContact = await prisma.contact.update({
             where: { id: id },
             data: {
                 name,
-                email,
+                email: email || null,
+                emailValidated: email ? isValidEmail(email) : false,
                 company,
                 tags,
                 phone

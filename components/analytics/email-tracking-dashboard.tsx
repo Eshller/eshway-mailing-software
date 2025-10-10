@@ -113,7 +113,7 @@ export function EmailTrackingDashboard({ data }: EmailTrackingDashboardProps) {
             title: "Delivered",
             value: data.totalDelivered || 0,
             total: data.totalSent || 0,
-            rate: data.deliveredRate || 0,
+            rate: data.deliveryRate || 0,
             icon: <CheckCircle className="h-4 w-4 text-green-600" />,
             color: "bg-green-100",
             trend: 2.1

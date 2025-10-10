@@ -52,8 +52,10 @@ export class EmailService {
     private fromName: string;
     private batchConfig: BatchConfig;
     private progressCallback?: (progress: BatchProgress) => void;
+    private settingsLoaded: boolean = false;
 
     constructor() {
+        // Initialize with defaults - will be updated when settings are loaded
         this.fromEmail = process.env.AWS_SES_FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || 'ltd@eshway.com';
         this.fromName = process.env.AWS_SES_FROM_NAME || 'Eshway';
 
@@ -72,11 +74,59 @@ export class EmailService {
         this.progressCallback = callback;
     }
 
+    // Load email settings from database
+    private async loadEmailSettings(): Promise<void> {
+        try {
+            const settings = await prisma.settings.findMany({
+                where: { category: 'email' }
+            });
+
+            // Convert database settings to object format
+            const emailSettings: Record<string, any> = {};
+            settings.forEach(setting => {
+                try {
+                    const parsedValue = JSON.parse(setting.value);
+                    emailSettings[setting.key] = parsedValue;
+                } catch (error) {
+                    emailSettings[setting.key] = setting.value;
+                }
+            });
+
+            // Update from email and name if they exist in settings
+            if (emailSettings.fromEmail) {
+                this.fromEmail = emailSettings.fromEmail;
+            }
+            if (emailSettings.fromName) {
+                this.fromName = emailSettings.fromName;
+            }
+
+            this.settingsLoaded = true;
+            console.log('📧 Email settings loaded:', {
+                fromEmail: this.fromEmail,
+                fromName: this.fromName
+            });
+        } catch (error) {
+            console.error('❌ Failed to load email settings:', error);
+            // Keep using default values if loading fails
+        }
+    }
+
+    // Refresh settings (useful when settings are updated)
+    async refreshSettings(): Promise<void> {
+        await this.loadEmailSettings();
+    }
+
     async sendEmail(emailData: EmailData): Promise<EmailResult[]> {
+        // Load settings from database if not already loaded
+        if (!this.settingsLoaded) {
+            await this.loadEmailSettings();
+        }
+
         const { recipients } = emailData;
         const totalEmails = recipients.length;
 
         console.log(`📧 Starting email campaign: ${totalEmails} emails`);
+        console.log(`📧 From: ${this.fromName} <${this.fromEmail}>`);
 
         // Initialize progress tracking
         const progress: BatchProgress = {

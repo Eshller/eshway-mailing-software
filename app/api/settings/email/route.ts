@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { emailService } from '@/lib/email-service';
 
 export const dynamic = "force-dynamic";
 
@@ -188,6 +189,14 @@ export async function POST(req: NextRequest) {
                 console.error(`Error saving setting ${key}:`, error);
                 // Continue with other settings even if one fails
             }
+        }
+
+        // Refresh email service settings
+        try {
+            await emailService.refreshSettings();
+            console.log('📧 Email service settings refreshed');
+        } catch (error) {
+            console.error('❌ Failed to refresh email service settings:', error);
         }
 
         return NextResponse.json({

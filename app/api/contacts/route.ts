@@ -77,7 +77,7 @@ export async function GET(req: Request) {
         }
 
         // Build the where clause
-        let where: any = {};
+        const where: any = {};
 
         // Filter by email status
         if (emailStatus === 'valid') {

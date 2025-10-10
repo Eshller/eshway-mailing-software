@@ -84,7 +84,7 @@ export function ConfirmationDialog({
                                     className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                                 />
                                 <span className="text-sm text-gray-700">
-                                    Don't ask me again
+                                    Don&apos;t ask me again
                                 </span>
                             </label>
                         </div>
